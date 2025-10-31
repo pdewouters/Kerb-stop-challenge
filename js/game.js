@@ -107,7 +107,7 @@ class Game {
 
     startGame() {
         // Initialize game objects
-        this.puppy = new Puppy(100, this.canvas.height * 0.35);
+        this.puppy = new Puppy(100, this.canvas.height * 0.65); // Moved lower on pavement
         this.kerbManager = new KerbManager(this.canvas.width, this.canvas.height);
 
         // Reset game state
