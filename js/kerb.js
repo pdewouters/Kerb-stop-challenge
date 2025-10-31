@@ -27,6 +27,9 @@ class Kerb {
         // Animation for visual feedback
         this.pulseTime = 0;
         this.pulseSpeed = 0.05;
+
+        // Parallax scrolling
+        this.backgroundOffset = 0;
     }
 
     configureZones() {
@@ -56,9 +59,12 @@ class Kerb {
         this.pulseTime += this.pulseSpeed;
     }
 
-    draw(ctx, showZones = true) {
+    draw(ctx, showZones = true, puppyX = 0) {
         const roadHeight = this.canvasHeight * 0.5;
         const pavementHeight = this.canvasHeight - roadHeight;
+
+        // Update background offset based on puppy movement (parallax scrolling)
+        this.backgroundOffset = puppyX * 0.3; // Buildings move slower than puppy
 
         // Draw sky/buildings background
         this.drawBackground(ctx, pavementHeight);
@@ -170,7 +176,7 @@ class Kerb {
         ctx.restore();
     }
 
-    // Draw background with buildings and sky
+    // Draw background with buildings and sky (with parallax scrolling)
     drawBackground(ctx, pavementHeight) {
         // Sky gradient
         const skyGradient = ctx.createLinearGradient(0, 0, 0, pavementHeight);
@@ -179,8 +185,8 @@ class Kerb {
         ctx.fillStyle = skyGradient;
         ctx.fillRect(0, 0, this.canvasWidth, pavementHeight);
 
-        // Draw buildings in background
-        const buildings = [
+        // Draw buildings in background with parallax scrolling
+        const baseBuildings = [
             { x: 50, width: 120, height: 180, color: '#8B7355' },
             { x: 180, width: 100, height: 220, color: '#A0826D' },
             { x: 290, width: 90, height: 160, color: '#967259' },
@@ -188,44 +194,64 @@ class Kerb {
             { x: 510, width: 95, height: 175, color: '#A0826D' },
         ];
 
-        buildings.forEach(building => {
-            const buildingTop = pavementHeight - building.height;
+        // Total width of building pattern
+        const patternWidth = 650;
 
-            // Building body
-            ctx.fillStyle = building.color;
-            ctx.fillRect(building.x, buildingTop, building.width, building.height);
+        // Draw buildings multiple times to create seamless scrolling
+        for (let offset = -patternWidth; offset < this.canvasWidth + patternWidth; offset += patternWidth) {
+            baseBuildings.forEach(building => {
+                // Apply parallax offset (wrap around)
+                const scrolledX = (building.x + offset - this.backgroundOffset) % (patternWidth * 2);
+                const finalX = scrolledX + (scrolledX < -patternWidth ? patternWidth * 2 : 0);
 
-            // Building outline
-            ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(building.x, buildingTop, building.width, building.height);
-
-            // Windows
-            ctx.fillStyle = '#FFE4B5';
-            const windowRows = Math.floor(building.height / 35);
-            const windowCols = Math.floor(building.width / 30);
-            for (let row = 0; row < windowRows; row++) {
-                for (let col = 0; col < windowCols; col++) {
-                    const wx = building.x + 10 + (col * 30);
-                    const wy = buildingTop + 10 + (row * 35);
-                    ctx.fillRect(wx, wy, 15, 20);
+                // Only draw if visible on screen
+                if (finalX > -building.width && finalX < this.canvasWidth + building.width) {
+                    this.drawBuilding(ctx, finalX, pavementHeight, building);
                 }
+            });
+        }
+
+        // Add some clouds (slower parallax)
+        const cloudOffset = this.backgroundOffset * 0.15;
+        this.drawCloud(ctx, (150 - cloudOffset) % (this.canvasWidth + 200), 50);
+        this.drawCloud(ctx, (450 - cloudOffset) % (this.canvasWidth + 200), 80);
+        this.drawCloud(ctx, (700 - cloudOffset) % (this.canvasWidth + 200), 60);
+    }
+
+    // Draw a single building
+    drawBuilding(ctx, x, pavementHeight, building) {
+        const buildingTop = pavementHeight - building.height;
+
+        // Building body
+        ctx.fillStyle = building.color;
+        ctx.fillRect(x, buildingTop, building.width, building.height);
+
+        // Building outline
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x, buildingTop, building.width, building.height);
+
+        // Windows
+        ctx.fillStyle = '#FFE4B5';
+        const windowRows = Math.floor(building.height / 35);
+        const windowCols = Math.floor(building.width / 30);
+        for (let row = 0; row < windowRows; row++) {
+            for (let col = 0; col < windowCols; col++) {
+                const wx = x + 10 + (col * 30);
+                const wy = buildingTop + 10 + (row * 35);
+                ctx.fillRect(wx, wy, 15, 20);
             }
+        }
 
-            // Roof
-            ctx.fillStyle = '#6B4423';
-            ctx.beginPath();
-            ctx.moveTo(building.x - 5, buildingTop);
-            ctx.lineTo(building.x + building.width / 2, buildingTop - 20);
-            ctx.lineTo(building.x + building.width + 5, buildingTop);
-            ctx.closePath();
-            ctx.fill();
-            ctx.stroke();
-        });
-
-        // Add some clouds
-        this.drawCloud(ctx, 150, 50);
-        this.drawCloud(ctx, 450, 80);
+        // Roof
+        ctx.fillStyle = '#6B4423';
+        ctx.beginPath();
+        ctx.moveTo(x - 5, buildingTop);
+        ctx.lineTo(x + building.width / 2, buildingTop - 20);
+        ctx.lineTo(x + building.width + 5, buildingTop);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
     }
 
     // Draw a simple cloud

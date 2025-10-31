@@ -189,11 +189,11 @@ class Game {
         this.ctx.fillStyle = gradient;
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-        // Draw current kerb
+        // Draw current kerb (with puppy position for parallax scrolling)
         const currentKerb = this.kerbManager.getCurrentKerb();
         if (currentKerb) {
             const showZones = this.puppy.state === 'walking';
-            currentKerb.draw(this.ctx, showZones);
+            currentKerb.draw(this.ctx, showZones, this.puppy.x);
         }
 
         // Draw puppy
