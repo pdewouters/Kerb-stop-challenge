@@ -60,8 +60,9 @@ class Kerb {
     }
 
     draw(ctx, showZones = true, puppyX = 0) {
-        const roadHeight = this.canvasHeight * 0.5;
-        const pavementHeight = this.canvasHeight - roadHeight;
+        // Pavement takes up bottom 40% of canvas, sky/buildings top 60%
+        const pavementHeight = this.canvasHeight * 0.6;
+        const roadHeight = this.canvasHeight - pavementHeight;
 
         // Update background offset based on puppy movement (parallax scrolling)
         this.backgroundOffset = puppyX * 0.3; // Buildings move slower than puppy
@@ -197,13 +198,15 @@ class Kerb {
         ctx.fillRect(0, 0, this.canvasWidth, pavementHeight);
 
         // Draw buildings in background with parallax scrolling
+        // Building heights are proportional to available sky space
+        const maxBuildingHeight = pavementHeight * 0.7; // Buildings use 70% of sky space
         const baseBuildings = [
-            { x: 50, width: 120, height: 180, color: '#8B7355' },
-            { x: 180, width: 100, height: 220, color: '#A0826D' },
-            { x: 290, width: 90, height: 160, color: '#967259' },
-            { x: 390, width: 110, height: 200, color: '#8B7355' },
-            { x: 510, width: 95, height: 175, color: '#A0826D' },
-        ];
+            { x: 50, width: 120, heightRatio: 0.6, color: '#8B7355' },
+            { x: 180, width: 100, heightRatio: 0.8, color: '#A0826D' },
+            { x: 290, width: 90, heightRatio: 0.5, color: '#967259' },
+            { x: 390, width: 110, heightRatio: 0.7, color: '#8B7355' },
+            { x: 510, width: 95, heightRatio: 0.65, color: '#A0826D' },
+        ].map(b => ({ ...b, height: maxBuildingHeight * b.heightRatio }));
 
         // Total width of building pattern
         const patternWidth = 650;

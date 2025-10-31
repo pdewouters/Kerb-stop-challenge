@@ -65,15 +65,22 @@ class Game {
         const container = this.canvas.parentElement;
         const rect = container.getBoundingClientRect();
 
-        // Set canvas size to fill container
-        this.canvas.width = Math.min(1200, rect.width);
-        this.canvas.height = Math.min(800, rect.height);
+        // Calculate available space
+        const uiHeight = document.getElementById('gameUI')?.offsetHeight || 100;
+        const availableHeight = window.innerHeight - uiHeight - 40; // Extra padding
 
-        // Maintain aspect ratio on mobile
+        // Set canvas size - ensure minimum height for proper rendering
         if (window.innerWidth < 768) {
-            this.canvas.width = rect.width;
-            this.canvas.height = window.innerHeight - 200; // Account for UI
+            // Mobile/tablet
+            this.canvas.width = Math.min(1200, rect.width || window.innerWidth);
+            this.canvas.height = Math.max(500, Math.min(availableHeight, 800));
+        } else {
+            // Desktop
+            this.canvas.width = Math.min(1200, rect.width);
+            this.canvas.height = Math.min(800, Math.max(500, rect.height));
         }
+
+        console.log('Canvas resized:', this.canvas.width, 'x', this.canvas.height);
     }
 
     setupInput() {
@@ -107,7 +114,8 @@ class Game {
 
     startGame() {
         // Initialize game objects
-        this.puppy = new Puppy(100, this.canvas.height * 0.65); // Moved lower on pavement
+        // Puppy at 70% down canvas (on the pavement, which starts at 60%)
+        this.puppy = new Puppy(100, this.canvas.height * 0.70);
         this.kerbManager = new KerbManager(this.canvas.width, this.canvas.height);
 
         // Reset game state
