@@ -394,69 +394,152 @@ class Game {
 
     renderStartScreen() {
         const startCanvas = document.getElementById('startCanvas');
-        if (!startCanvas) return;
-
-        const ctx = startCanvas.getContext('2d');
-
-        // Set canvas size
-        startCanvas.width = window.innerWidth;
-        startCanvas.height = window.innerHeight;
-
-        // Create a static scene similar to the game
-        const canvasWidth = startCanvas.width;
-        const canvasHeight = startCanvas.height;
-
-        // Sky gradient
-        const gradient = ctx.createLinearGradient(0, 0, 0, canvasHeight);
-        gradient.addColorStop(0, '#87CEEB');
-        gradient.addColorStop(1, '#E0F6FF');
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-
-        // Create a temporary kerb object for drawing background
-        const pavementHeight = canvasHeight * 0.6;
-        const tempKerb = new Kerb(canvasWidth * 0.6, canvasWidth, canvasHeight, 1);
-
-        // Draw the background scene (buildings, trees, clouds)
-        tempKerb.drawBackground(ctx, pavementHeight);
-
-        // Draw pavement
-        const pavementGradient = ctx.createLinearGradient(0, pavementHeight, 0, canvasHeight);
-        pavementGradient.addColorStop(0, '#D3D3D3');
-        pavementGradient.addColorStop(1, '#BEBEBE');
-        ctx.fillStyle = pavementGradient;
-        ctx.fillRect(0, pavementHeight, canvasWidth * 0.6, canvasHeight - pavementHeight);
-
-        // Pavement texture
-        ctx.strokeStyle = 'rgba(0, 0, 0, 0.08)';
-        ctx.lineWidth = 2;
-        const slabWidth = 60;
-        const slabHeight = 40;
-        for (let y = pavementHeight; y < canvasHeight; y += slabHeight) {
-            ctx.beginPath();
-            ctx.moveTo(0, y);
-            ctx.lineTo(canvasWidth * 0.6, y);
-            ctx.stroke();
+        if (!startCanvas) {
+            console.warn('Start canvas not found');
+            return;
         }
 
-        // Draw road
-        ctx.fillStyle = '#4A4A4A';
-        ctx.fillRect(canvasWidth * 0.6, pavementHeight, canvasWidth * 0.4, canvasHeight - pavementHeight);
+        try {
+            const ctx = startCanvas.getContext('2d');
 
-        // Draw kerb edge
-        ctx.fillStyle = '#FFD700';
-        ctx.fillRect(canvasWidth * 0.6 - 5, pavementHeight - 5, 10, 5);
+            // Set canvas size
+            startCanvas.width = window.innerWidth;
+            startCanvas.height = window.innerHeight;
 
-        // Draw traffic light
-        tempKerb.drawTrafficLight(ctx, canvasWidth * 0.6 - 60, pavementHeight - 120);
+            const canvasWidth = startCanvas.width;
+            const canvasHeight = startCanvas.height;
+            const pavementHeight = canvasHeight * 0.6;
 
-        // Draw a dog on the pavement
-        const dogImg = new Image();
-        dogImg.src = 'assets/images/dog.png';
-        dogImg.onload = () => {
-            const dogWidth = 100;
-            const dogHeight = (dogImg.height / dogImg.width) * dogWidth;
-            ctx.drawImage(dogImg, canvasWidth * 0.3, canvasHeight * 0.7 - dogHeight / 2, dogWidth, dogHeight);
-        };
+            // Sky gradient
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvasHeight);
+            gradient.addColorStop(0, '#87CEEB');
+            gradient.addColorStop(1, '#E0F6FF');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+            // Draw clouds
+            this.drawSimpleCloud(ctx, 150, 80, 60);
+            this.drawSimpleCloud(ctx, 450, 120, 50);
+            this.drawSimpleCloud(ctx, 750, 100, 55);
+
+            // Draw simple buildings
+            this.drawSimpleBuilding(ctx, 100, pavementHeight - 180, 120, 180, '#B85450');
+            this.drawSimpleBuilding(ctx, 240, pavementHeight - 240, 100, 240, '#C67B5C');
+            this.drawSimpleBuilding(ctx, 360, pavementHeight - 160, 90, 160, '#D4A574');
+            this.drawSimpleBuilding(ctx, 470, pavementHeight - 200, 110, 200, '#A8483F');
+            this.drawSimpleBuilding(ctx, 600, pavementHeight - 190, 95, 190, '#D9C2A3');
+
+            // Draw trees
+            this.drawSimpleTree(ctx, 230, pavementHeight, 80);
+            this.drawSimpleTree(ctx, 455, pavementHeight, 70);
+
+            // Draw pavement
+            const pavementGradient = ctx.createLinearGradient(0, pavementHeight, 0, canvasHeight);
+            pavementGradient.addColorStop(0, '#D3D3D3');
+            pavementGradient.addColorStop(1, '#BEBEBE');
+            ctx.fillStyle = pavementGradient;
+            ctx.fillRect(0, pavementHeight, canvasWidth * 0.6, canvasHeight - pavementHeight);
+
+            // Draw road
+            ctx.fillStyle = '#4A4A4A';
+            ctx.fillRect(canvasWidth * 0.6, pavementHeight, canvasWidth * 0.4, canvasHeight - pavementHeight);
+
+            // Draw kerb edge
+            ctx.fillStyle = '#FFD700';
+            ctx.fillRect(canvasWidth * 0.6 - 5, pavementHeight - 5, 10, 5);
+
+            // Draw traffic light
+            this.drawSimpleTrafficLight(ctx, canvasWidth * 0.6 - 60, pavementHeight - 120);
+
+            // Draw dog (if image loads)
+            const dogImg = new Image();
+            dogImg.onerror = () => {
+                console.warn('Dog image failed to load for start screen');
+            };
+            dogImg.onload = () => {
+                const dogWidth = 100;
+                const dogHeight = (dogImg.height / dogImg.width) * dogWidth;
+                ctx.drawImage(dogImg, canvasWidth * 0.3, canvasHeight * 0.7 - dogHeight / 2, dogWidth, dogHeight);
+            };
+            dogImg.src = 'assets/images/dog.png';
+        } catch (error) {
+            console.error('Error rendering start screen:', error);
+        }
+    }
+
+    drawSimpleCloud(ctx, x, y, size) {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        ctx.beginPath();
+        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.arc(x + size * 0.7, y, size * 0.8, 0, Math.PI * 2);
+        ctx.arc(x + size * 1.4, y, size * 0.6, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    drawSimpleBuilding(ctx, x, y, width, height, color) {
+        // Building body
+        ctx.fillStyle = color;
+        ctx.fillRect(x, y, width, height);
+
+        // Outline
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.4)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x, y, width, height);
+
+        // Windows
+        const windowRows = Math.floor(height / 40);
+        const windowCols = Math.floor(width / 35);
+        for (let row = 0; row < windowRows; row++) {
+            for (let col = 0; col < windowCols; col++) {
+                const wx = x + 12 + (col * 35);
+                const wy = y + 15 + (row * 40);
+                ctx.fillStyle = Math.random() > 0.3 ? '#FFF5C8' : '#B0D4E8';
+                ctx.fillRect(wx, wy, 16, 20);
+            }
+        }
+    }
+
+    drawSimpleTree(ctx, x, y, height) {
+        const crownRadius = 15;
+        // Trunk
+        ctx.fillStyle = '#6B5244';
+        ctx.fillRect(x - 4, y - height + crownRadius, 8, height - crownRadius);
+
+        // Crown
+        ctx.fillStyle = '#6B9B6E';
+        ctx.beginPath();
+        ctx.arc(x, y - height + crownRadius, crownRadius, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    drawSimpleTrafficLight(ctx, x, y) {
+        // Pole
+        ctx.fillStyle = '#333';
+        ctx.fillRect(x + 17, y, 4, 120);
+
+        // Box
+        ctx.fillStyle = '#222';
+        ctx.fillRect(x, y, 38, 90);
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x, y, 38, 90);
+
+        // Red light (on)
+        ctx.fillStyle = '#FF4444';
+        ctx.beginPath();
+        ctx.arc(x + 19, y + 15, 12, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Amber light (off)
+        ctx.fillStyle = '#664400';
+        ctx.beginPath();
+        ctx.arc(x + 19, y + 40, 12, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Green light (off)
+        ctx.fillStyle = '#003300';
+        ctx.beginPath();
+        ctx.arc(x + 19, y + 65, 12, 0, Math.PI * 2);
+        ctx.fill();
     }
 }
