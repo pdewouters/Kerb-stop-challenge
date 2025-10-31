@@ -138,6 +138,12 @@ class Game {
         // Show game screen
         ScreenManager.show('gameScreen');
 
+        // Resize canvas after screen is shown to ensure correct dimensions
+        setTimeout(() => {
+            this.resizeCanvas();
+            console.log('Canvas resized after game screen shown');
+        }, 100);
+
         // Start game loop
         this.lastTime = performance.now();
         this.gameLoop();
