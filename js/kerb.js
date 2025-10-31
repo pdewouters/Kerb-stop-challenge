@@ -261,16 +261,6 @@ class Kerb {
                 ctx.fillRect(wx, wy, 15, 20);
             }
         }
-
-        // Roof
-        ctx.fillStyle = '#6B4423';
-        ctx.beginPath();
-        ctx.moveTo(x - 5, buildingTop);
-        ctx.lineTo(x + building.width / 2, buildingTop - 20);
-        ctx.lineTo(x + building.width + 5, buildingTop);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
     }
 
     // Draw a simple cloud
