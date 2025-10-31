@@ -176,9 +176,11 @@ class UIManager {
             this.elements.completeTitle.textContent = 'Training Complete!';
         }
 
-        // Update personal message in donation modal
-        this.elements.personalMessage.textContent =
-            `Your score of ${score} helped master kerb stops!`;
+        // Update score in donation modal
+        const modalScoreElement = document.getElementById('modalScore');
+        if (modalScoreElement) {
+            modalScoreElement.textContent = score;
+        }
 
         ScreenManager.show('completeScreen');
     }
