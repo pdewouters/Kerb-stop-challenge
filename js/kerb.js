@@ -206,26 +206,32 @@ class Kerb {
         // Building heights are proportional to available sky space
         const maxBuildingHeight = pavementHeight * 0.7; // Buildings use 70% of sky space
         const baseBuildings = [
-            { x: 50, width: 120, heightRatio: 0.6, color: '#8B7355' },
-            { x: 180, width: 100, heightRatio: 0.8, color: '#A0826D' },
-            { x: 290, width: 90, heightRatio: 0.5, color: '#967259' },
-            { x: 390, width: 110, heightRatio: 0.7, color: '#8B7355' },
-            { x: 510, width: 95, heightRatio: 0.65, color: '#A0826D' },
+            { x: 50, width: 120, heightRatio: 0.6, color: '#B85450', type: 'brick' },
+            { x: 180, width: 30, heightRatio: 0.4, type: 'tree' }, // Tree between buildings
+            { x: 220, width: 100, heightRatio: 0.8, color: '#C67B5C', type: 'brick' },
+            { x: 330, width: 90, heightRatio: 0.5, color: '#D4A574', type: 'stone' },
+            { x: 430, width: 25, heightRatio: 0.35, type: 'tree' },
+            { x: 465, width: 110, heightRatio: 0.7, color: '#A8483F', type: 'brick' },
+            { x: 585, width: 95, heightRatio: 0.65, color: '#D9C2A3', type: 'stone' },
         ].map(b => ({ ...b, height: maxBuildingHeight * b.heightRatio }));
 
         // Total width of building pattern
-        const patternWidth = 650;
+        const patternWidth = 700;
 
-        // Draw buildings multiple times to create seamless scrolling
+        // Draw buildings and trees multiple times to create seamless scrolling
         for (let offset = -patternWidth; offset < this.canvasWidth + patternWidth; offset += patternWidth) {
-            baseBuildings.forEach(building => {
+            baseBuildings.forEach(element => {
                 // Apply parallax offset (wrap around)
-                const scrolledX = (building.x + offset - this.backgroundOffset) % (patternWidth * 2);
+                const scrolledX = (element.x + offset - this.backgroundOffset) % (patternWidth * 2);
                 const finalX = scrolledX + (scrolledX < -patternWidth ? patternWidth * 2 : 0);
 
                 // Only draw if visible on screen
-                if (finalX > -building.width && finalX < this.canvasWidth + building.width) {
-                    this.drawBuilding(ctx, finalX, pavementHeight, building);
+                if (finalX > -element.width && finalX < this.canvasWidth + element.width) {
+                    if (element.type === 'tree') {
+                        this.drawTree(ctx, finalX, pavementHeight, element);
+                    } else {
+                        this.drawBuilding(ctx, finalX, pavementHeight, element);
+                    }
                 }
             });
         }
@@ -237,30 +243,127 @@ class Kerb {
         this.drawCloud(ctx, (700 - cloudOffset) % (this.canvasWidth + 200), 60);
     }
 
-    // Draw a single building
+    // Draw a single building with brick texture
     drawBuilding(ctx, x, pavementHeight, building) {
         const buildingTop = pavementHeight - building.height;
 
-        // Building body
+        // Building body with base color
         ctx.fillStyle = building.color;
         ctx.fillRect(x, buildingTop, building.width, building.height);
 
+        // Add brick or stone texture
+        if (building.type === 'brick') {
+            this.drawBrickTexture(ctx, x, buildingTop, building.width, building.height, building.color);
+        } else if (building.type === 'stone') {
+            this.drawStoneTexture(ctx, x, buildingTop, building.width, building.height, building.color);
+        }
+
         // Building outline
-        ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.4)';
         ctx.lineWidth = 2;
         ctx.strokeRect(x, buildingTop, building.width, building.height);
 
-        // Windows
-        ctx.fillStyle = '#FFE4B5';
-        const windowRows = Math.floor(building.height / 35);
-        const windowCols = Math.floor(building.width / 30);
+        // Windows with frames
+        const windowRows = Math.floor(building.height / 40);
+        const windowCols = Math.floor(building.width / 35);
         for (let row = 0; row < windowRows; row++) {
             for (let col = 0; col < windowCols; col++) {
-                const wx = x + 10 + (col * 30);
-                const wy = buildingTop + 10 + (row * 35);
-                ctx.fillRect(wx, wy, 15, 20);
+                const wx = x + 12 + (col * 35);
+                const wy = buildingTop + 15 + (row * 40);
+
+                // Window frame (darker)
+                ctx.fillStyle = 'rgba(80, 60, 40, 0.6)';
+                ctx.fillRect(wx - 2, wy - 2, 20, 24);
+
+                // Window glass (light blue/yellow)
+                const isLit = Math.random() > 0.3;
+                ctx.fillStyle = isLit ? '#FFF5C8' : '#B0D4E8';
+                ctx.fillRect(wx, wy, 16, 20);
+
+                // Window panes
+                ctx.strokeStyle = 'rgba(80, 60, 40, 0.4)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(wx + 8, wy);
+                ctx.lineTo(wx + 8, wy + 20);
+                ctx.moveTo(wx, wy + 10);
+                ctx.lineTo(wx + 16, wy + 10);
+                ctx.stroke();
             }
         }
+    }
+
+    // Draw brick texture
+    drawBrickTexture(ctx, x, y, width, height, baseColor) {
+        const brickWidth = 12;
+        const brickHeight = 6;
+
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.15)';
+        ctx.lineWidth = 1;
+
+        // Draw horizontal mortar lines
+        for (let by = 0; by < height; by += brickHeight) {
+            ctx.beginPath();
+            ctx.moveTo(x, y + by);
+            ctx.lineTo(x + width, y + by);
+            ctx.stroke();
+
+            // Draw vertical mortar lines (offset every other row)
+            const offset = (Math.floor(by / brickHeight) % 2) * (brickWidth / 2);
+            for (let bx = offset; bx < width; bx += brickWidth) {
+                ctx.beginPath();
+                ctx.moveTo(x + bx, y + by);
+                ctx.lineTo(x + bx, y + by + brickHeight);
+                ctx.stroke();
+            }
+        }
+    }
+
+    // Draw stone texture
+    drawStoneTexture(ctx, x, y, width, height, baseColor) {
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+        ctx.lineWidth = 1;
+
+        // Draw random stone blocks
+        const blockSize = 20;
+        for (let sy = 0; sy < height; sy += blockSize) {
+            for (let sx = 0; sx < width; sx += blockSize) {
+                ctx.strokeRect(x + sx, y + sy, blockSize, blockSize);
+            }
+        }
+    }
+
+    // Draw a tree
+    drawTree(ctx, x, pavementHeight, tree) {
+        const treeBottom = pavementHeight;
+        const treeTop = treeBottom - tree.height;
+        const trunkWidth = 8;
+        const crownRadius = tree.width / 2;
+
+        // Tree trunk
+        ctx.fillStyle = '#6B5244';
+        ctx.fillRect(x + crownRadius - trunkWidth/2, treeTop + crownRadius, trunkWidth, tree.height - crownRadius);
+
+        // Tree crown (foliage) - layered circles for depth
+        const crownY = treeTop + crownRadius;
+
+        // Shadow layer (darker green)
+        ctx.fillStyle = '#4A7C59';
+        ctx.beginPath();
+        ctx.arc(x + crownRadius, crownY + 3, crownRadius - 2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Main layer
+        ctx.fillStyle = '#6B9B6E';
+        ctx.beginPath();
+        ctx.arc(x + crownRadius, crownY, crownRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Highlight layer (lighter green)
+        ctx.fillStyle = '#8FBC8F';
+        ctx.beginPath();
+        ctx.arc(x + crownRadius - 3, crownY - 3, crownRadius - 4, 0, Math.PI * 2);
+        ctx.fill();
     }
 
     // Draw a simple cloud
