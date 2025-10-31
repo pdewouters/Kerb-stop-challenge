@@ -7,8 +7,8 @@ class Puppy {
     constructor(x, y) {
         this.x = x;
         this.y = y;
-        this.width = 100;
-        this.height = 80;
+        this.width = 120; // Slightly bigger for the nice PNG
+        this.height = 100;
         this.speed = 2; // pixels per frame
         this.state = 'walking'; // walking, sitting, stopped
 
@@ -29,9 +29,9 @@ class Puppy {
         this.imageLoaded = false;
         this.imageAttempts = 0;
         this.imagePaths = [
-            'assets/images/Labrador.jpg',
-            './assets/images/Labrador.jpg',
-            '/Kerb-stop-challenge/assets/images/Labrador.jpg', // GitHub Pages path
+            'assets/images/dog.png',
+            './assets/images/dog.png',
+            '/Kerb-stop-challenge/assets/images/dog.png', // GitHub Pages path
         ];
 
         this.image.onload = () => {
