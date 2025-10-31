@@ -8,6 +8,25 @@ class UIManager {
         this.game = game;
         this.elements = this.cacheElements();
         this.setupEventListeners();
+
+        // Guide dog facts for the donation modal
+        this.guideDogFacts = [
+            "It takes 2 years to train a guide dog, starting from when they're just 6 weeks old!",
+            "Guide dogs can learn over 50 commands to keep their owners safe.",
+            "Labrador Retrievers and Golden Retrievers are the most common guide dog breeds because of their friendly temperament.",
+            "A guide dog's working life is typically 7-8 years, after which they retire and often stay with their owner as a pet.",
+            "Guide dogs are trained to 'intelligently disobey' - they'll refuse an unsafe command to protect their handler.",
+            "The first guide dog school was established in Germany in 1916 to help soldiers blinded in World War I.",
+            "Guide dogs wear special harnesses with a rigid handle that allows them to communicate direction changes to their handler.",
+            "Training includes navigating busy streets, public transport, shops, and even escalators!",
+            "Guide dogs can detect overhead obstacles like tree branches to protect their handler's head.",
+            "Each guide dog is matched to their owner based on personality, walking speed, and lifestyle.",
+            "Guide dogs learn to find specific locations like doors, stairs, and crossing points on command.",
+            "The partnership between a guide dog and their owner is built on trust, with the dog making split-second safety decisions.",
+            "Guide dogs must be comfortable in all environments - from quiet country lanes to bustling city centers.",
+            "Puppy walkers volunteer to raise guide dog puppies for their first year, teaching them basic obedience and socialization.",
+            "Guide dogs are trained to ignore distractions like other dogs, food, and loud noises while working."
+        ];
     }
 
     cacheElements() {
@@ -210,6 +229,16 @@ class UIManager {
     }
 
     showDonationModal() {
+        // Select random fact
+        const randomIndex = Math.floor(Math.random() * this.guideDogFacts.length);
+        const randomFact = this.guideDogFacts[randomIndex];
+
+        // Display in modal
+        const factElement = document.getElementById('randomFact');
+        if (factElement) {
+            factElement.textContent = randomFact;
+        }
+
         ModalManager.show('donationModal');
     }
 
