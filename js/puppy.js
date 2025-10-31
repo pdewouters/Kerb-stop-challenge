@@ -57,10 +57,10 @@ class Puppy {
         this.image.src = this.imagePaths[0];
         console.log('📸 Loading puppy image from:', this.image.src);
 
-        // Fallback colors (if image fails)
-        this.colorBody = '#E8C39E';
-        this.colorDark = '#C5A572';
-        this.colorLight = '#FFF8DC';
+        // Fallback colors (if image fails) - BRIGHT and visible!
+        this.colorBody = '#FFD700'; // Bright gold
+        this.colorDark = '#FF6B00'; // Bright orange
+        this.colorLight = '#FFFFFF';
     }
 
     update(deltaTime = 1) {
@@ -99,6 +99,23 @@ class Puppy {
 
     // Draw the puppy on canvas
     draw(ctx) {
+        // DEBUG: Always draw a bright test circle to verify rendering works
+        ctx.save();
+        ctx.fillStyle = 'rgba(255, 0, 255, 0.5)'; // Bright magenta debug circle
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, 50, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // Draw status text for debugging
+        ctx.save();
+        ctx.fillStyle = '#000000';
+        ctx.font = 'bold 16px Arial';
+        ctx.fillText(`Dog at: ${Math.round(this.x)}, ${Math.round(this.y)}`, 10, 100);
+        ctx.fillText(`Image loaded: ${this.imageLoaded}`, 10, 120);
+        ctx.fillText(`State: ${this.state}`, 10, 140);
+        ctx.restore();
+
         if (!this.imageLoaded) {
             // Draw a simple placeholder while image loads
             this.drawPlaceholder(ctx);
