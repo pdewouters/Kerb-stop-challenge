@@ -57,6 +57,21 @@ class Puppy {
         this.image.src = this.imagePaths[0];
         console.log('📸 Loading puppy image from:', this.image.src);
 
+        // Optional sitting image (progressive enhancement)
+        this.imageSitting = new Image();
+        this.imageSittingLoaded = false;
+        this.imageSitting.onload = () => {
+            this.imageSittingLoaded = true;
+            console.log('✅ Sitting puppy image loaded (optional)');
+        };
+        this.imageSitting.onerror = () => {
+            console.log('ℹ️ Sitting image not available, will use walking image for all states');
+            this.imageSittingLoaded = false;
+        };
+
+        // Try to load sitting image (best effort, no retries needed)
+        this.imageSitting.src = this.imagePaths[0].replace('dog.png', 'dog-sitting.png');
+
         // Fallback colors (if image fails) - BRIGHT and visible!
         this.colorBody = '#FFD700'; // Bright gold
         this.colorDark = '#FF6B00'; // Bright orange
@@ -108,26 +123,33 @@ class Puppy {
         ctx.save();
         ctx.translate(this.x, this.y);
 
-        // Calculate position based on state
+        // Calculate position and image based on state
         let yOffset = 0;
+        let currentImage = this.image; // Default to walking image
 
-        if (this.state === 'walking' || this.state === 'sitting') {
-            // Walking: slight bounce
+        if (this.state === 'walking') {
+            // Walking: use walking image with bounce
+            currentImage = this.image;
             yOffset = this.bounceOffset;
-
-            // During sitting transition, lower the dog
-            yOffset += this.sitProgress * 10;
+        } else if (this.state === 'sitting') {
+            // Transitioning to sitting
+            yOffset = this.bounceOffset + (this.sitProgress * 10);
+            // Switch to sitting image halfway through transition (if available)
+            if (this.sitProgress >= 0.5 && this.imageSittingLoaded) {
+                currentImage = this.imageSitting;
+            }
         } else if (this.state === 'stopped') {
-            // Sitting: lower position
+            // Fully stopped: use sitting image if available, otherwise walking image
+            currentImage = this.imageSittingLoaded ? this.imageSitting : this.image;
             yOffset = 10;
         }
 
-        // Draw the image (no cropping needed - clean image!)
+        // Draw the appropriate image
         const drawWidth = this.width;
-        const drawHeight = (this.image.height / this.image.width) * drawWidth;
+        const drawHeight = (currentImage.height / currentImage.width) * drawWidth;
 
         ctx.drawImage(
-            this.image,
+            currentImage,
             -drawWidth / 2, -drawHeight / 2 + yOffset,  // Dest x, y (centered)
             drawWidth, drawHeight  // Dest width, height
         );
