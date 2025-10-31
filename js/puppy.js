@@ -27,16 +27,34 @@ class Puppy {
         // Image
         this.image = new Image();
         this.imageLoaded = false;
+        this.imageAttempts = 0;
+        this.imagePaths = [
+            'assets/images/28599.jpg',
+            './assets/images/28599.jpg',
+            '/Kerb-stop-challenge/assets/images/28599.jpg', // GitHub Pages path
+        ];
+
         this.image.onload = () => {
             this.imageLoaded = true;
-            console.log('✅ Puppy image loaded successfully!');
+            console.log('✅ Puppy image loaded successfully from:', this.image.src);
         };
+
         this.image.onerror = (err) => {
             console.error('❌ Failed to load puppy image from:', this.image.src);
-            console.error('Error:', err);
-            this.imageLoaded = false;
+            this.imageAttempts++;
+
+            // Try next path
+            if (this.imageAttempts < this.imagePaths.length) {
+                console.log('🔄 Trying alternate path...');
+                this.image.src = this.imagePaths[this.imageAttempts];
+            } else {
+                console.error('❌ All image paths failed. Using placeholder.');
+                this.imageLoaded = false;
+            }
         };
-        this.image.src = 'assets/images/28599.jpg';
+
+        // Start loading with first path
+        this.image.src = this.imagePaths[0];
         console.log('📸 Loading puppy image from:', this.image.src);
 
         // Fallback colors (if image fails)
@@ -124,22 +142,48 @@ class Puppy {
         ctx.restore();
     }
 
-    // Placeholder while image loads
+    // Placeholder while image loads or if it fails
     drawPlaceholder(ctx) {
         ctx.save();
         ctx.translate(this.x, this.y);
 
-        // Simple dog shape placeholder
+        // Calculate position based on state
+        let yOffset = 0;
+        if (this.state === 'walking' || this.state === 'sitting') {
+            yOffset = this.bounceOffset;
+            yOffset += this.sitProgress * 10;
+        } else if (this.state === 'stopped') {
+            yOffset = 10;
+        }
+
+        ctx.translate(0, yOffset);
+
+        // Simple dog shape - body
         ctx.fillStyle = this.colorBody;
         ctx.beginPath();
-        ctx.ellipse(0, 0, this.width / 2, this.height / 2, 0, 0, Math.PI * 2);
+        ctx.ellipse(0, -10, 35, 20, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        // Add "Loading..." text
-        ctx.fillStyle = '#666';
-        ctx.font = '12px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('🐕', 0, 5);
+        // Head
+        ctx.beginPath();
+        ctx.ellipse(25, -15, 15, 12, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Legs
+        ctx.fillStyle = this.colorDark;
+        ctx.fillRect(-10, 5, 8, 15);
+        ctx.fillRect(10, 5, 8, 15);
+
+        // Ear
+        ctx.beginPath();
+        ctx.ellipse(18, -20, 6, 10, -0.3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Eye
+        ctx.fillStyle = '#000';
+        ctx.beginPath();
+        ctx.arc(28, -17, 2, 0, Math.PI * 2);
+        ctx.fill();
 
         ctx.restore();
     }
