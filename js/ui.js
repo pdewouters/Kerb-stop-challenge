@@ -229,14 +229,19 @@ class UIManager {
     }
 
     showDonationModal() {
-        // Select random fact
-        const randomIndex = Math.floor(Math.random() * this.guideDogFacts.length);
-        const randomFact = this.guideDogFacts[randomIndex];
+        const modal = document.getElementById('donationModal');
+        const isAlreadyVisible = modal && modal.classList.contains('active');
 
-        // Display in modal
-        const factElement = document.getElementById('randomFact');
-        if (factElement) {
-            factElement.textContent = randomFact;
+        // Only pick a new random fact if modal is currently hidden
+        if (!isAlreadyVisible) {
+            const randomIndex = Math.floor(Math.random() * this.guideDogFacts.length);
+            const randomFact = this.guideDogFacts[randomIndex];
+
+            // Display in modal
+            const factElement = document.getElementById('randomFact');
+            if (factElement) {
+                factElement.textContent = randomFact;
+            }
         }
 
         ModalManager.show('donationModal');
