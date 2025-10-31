@@ -60,9 +60,12 @@ class Kerb {
         const roadHeight = this.canvasHeight * 0.5;
         const pavementHeight = this.canvasHeight - roadHeight;
 
+        // Draw sky/buildings background
+        this.drawBackground(ctx, pavementHeight);
+
         // Draw pavement (left side)
         ctx.fillStyle = this.colorPavement;
-        ctx.fillRect(0, 0, this.x, pavementHeight);
+        ctx.fillRect(0, pavementHeight, this.x, this.canvasHeight - pavementHeight);
 
         // Pavement texture (simple grid)
         ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
@@ -70,11 +73,11 @@ class Kerb {
         const gridSize = 30;
         for (let x = 0; x < this.x; x += gridSize) {
             ctx.beginPath();
-            ctx.moveTo(x, 0);
-            ctx.lineTo(x, pavementHeight);
+            ctx.moveTo(x, pavementHeight);
+            ctx.lineTo(x, this.canvasHeight);
             ctx.stroke();
         }
-        for (let y = 0; y < pavementHeight; y += gridSize) {
+        for (let y = pavementHeight; y < this.canvasHeight; y += gridSize) {
             ctx.beginPath();
             ctx.moveTo(0, y);
             ctx.lineTo(this.x, y);
@@ -83,20 +86,23 @@ class Kerb {
 
         // Draw road (right side)
         ctx.fillStyle = this.colorRoad;
-        ctx.fillRect(this.x, 0, this.canvasWidth - this.x, roadHeight);
+        ctx.fillRect(this.x, pavementHeight, this.canvasWidth - this.x, this.canvasHeight - pavementHeight);
 
         // Road center line
         ctx.setLineDash([20, 10]);
         ctx.strokeStyle = '#FFFFFF';
         ctx.lineWidth = 3;
         ctx.beginPath();
-        ctx.moveTo(this.x + (this.canvasWidth - this.x) / 2, 0);
-        ctx.lineTo(this.x + (this.canvasWidth - this.x) / 2, roadHeight);
+        ctx.moveTo(this.x + (this.canvasWidth - this.x) / 2, pavementHeight);
+        ctx.lineTo(this.x + (this.canvasWidth - this.x) / 2, this.canvasHeight);
         ctx.stroke();
         ctx.setLineDash([]);
 
         // Draw kerb edge
         this.drawKerbEdge(ctx, pavementHeight);
+
+        // Draw traffic light near kerb
+        this.drawTrafficLight(ctx, this.x - 60, pavementHeight - 120);
 
         // Draw stop zones (if showing)
         if (showZones) {
@@ -162,6 +168,110 @@ class Kerb {
         ctx.fillText(text, x, y - 20);
 
         ctx.restore();
+    }
+
+    // Draw background with buildings and sky
+    drawBackground(ctx, pavementHeight) {
+        // Sky gradient
+        const skyGradient = ctx.createLinearGradient(0, 0, 0, pavementHeight);
+        skyGradient.addColorStop(0, '#87CEEB');
+        skyGradient.addColorStop(1, '#B0D4F1');
+        ctx.fillStyle = skyGradient;
+        ctx.fillRect(0, 0, this.canvasWidth, pavementHeight);
+
+        // Draw buildings in background
+        const buildings = [
+            { x: 50, width: 120, height: 180, color: '#8B7355' },
+            { x: 180, width: 100, height: 220, color: '#A0826D' },
+            { x: 290, width: 90, height: 160, color: '#967259' },
+            { x: 390, width: 110, height: 200, color: '#8B7355' },
+            { x: 510, width: 95, height: 175, color: '#A0826D' },
+        ];
+
+        buildings.forEach(building => {
+            const buildingTop = pavementHeight - building.height;
+
+            // Building body
+            ctx.fillStyle = building.color;
+            ctx.fillRect(building.x, buildingTop, building.width, building.height);
+
+            // Building outline
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(building.x, buildingTop, building.width, building.height);
+
+            // Windows
+            ctx.fillStyle = '#FFE4B5';
+            const windowRows = Math.floor(building.height / 35);
+            const windowCols = Math.floor(building.width / 30);
+            for (let row = 0; row < windowRows; row++) {
+                for (let col = 0; col < windowCols; col++) {
+                    const wx = building.x + 10 + (col * 30);
+                    const wy = buildingTop + 10 + (row * 35);
+                    ctx.fillRect(wx, wy, 15, 20);
+                }
+            }
+
+            // Roof
+            ctx.fillStyle = '#6B4423';
+            ctx.beginPath();
+            ctx.moveTo(building.x - 5, buildingTop);
+            ctx.lineTo(building.x + building.width / 2, buildingTop - 20);
+            ctx.lineTo(building.x + building.width + 5, buildingTop);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+        });
+
+        // Add some clouds
+        this.drawCloud(ctx, 150, 50);
+        this.drawCloud(ctx, 450, 80);
+    }
+
+    // Draw a simple cloud
+    drawCloud(ctx, x, y) {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        ctx.beginPath();
+        ctx.arc(x, y, 20, 0, Math.PI * 2);
+        ctx.arc(x + 25, y, 25, 0, Math.PI * 2);
+        ctx.arc(x + 50, y, 20, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Draw traffic light
+    drawTrafficLight(ctx, x, y) {
+        // Pole
+        ctx.fillStyle = '#4A4A4A';
+        ctx.fillRect(x + 15, y + 80, 8, 120);
+
+        // Traffic light box
+        ctx.fillStyle = '#2C2C2C';
+        ctx.fillRect(x, y, 38, 80);
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x, y, 38, 80);
+
+        // Lights (red, amber, green from top to bottom)
+        // Red light (on for "stop")
+        ctx.fillStyle = '#FF0000';
+        ctx.beginPath();
+        ctx.arc(x + 19, y + 15, 12, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#8B0000';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // Amber light (off)
+        ctx.fillStyle = '#664400';
+        ctx.beginPath();
+        ctx.arc(x + 19, y + 40, 12, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Green light (off)
+        ctx.fillStyle = '#003300';
+        ctx.beginPath();
+        ctx.arc(x + 19, y + 65, 12, 0, Math.PI * 2);
+        ctx.fill();
     }
 
     // Check if position is in stop zone
