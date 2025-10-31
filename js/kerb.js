@@ -48,11 +48,16 @@ class Kerb {
             this.perfectZoneSize = 30;
         }
 
-        // Zone boundaries (relative to kerb position)
-        this.stopZoneStart = this.x - this.stopZoneSize;
-        this.stopZoneEnd = this.x;
-        this.perfectZoneStart = this.x - this.perfectZoneSize;
-        this.perfectZoneEnd = this.x;
+        // Zone boundaries - aligned with traffic light position (x - 60)
+        const trafficLightX = this.x - 60;
+
+        // Stop zone: wider area around traffic light
+        this.stopZoneStart = trafficLightX - (this.stopZoneSize / 2);
+        this.stopZoneEnd = trafficLightX + (this.stopZoneSize / 2);
+
+        // Perfect zone: centered on traffic light
+        this.perfectZoneStart = trafficLightX - (this.perfectZoneSize / 2);
+        this.perfectZoneEnd = trafficLightX + (this.perfectZoneSize / 2);
     }
 
     update() {

@@ -68,19 +68,23 @@ class Game {
         // Calculate available space
         const uiHeight = document.getElementById('gameUI')?.offsetHeight || 100;
         const availableHeight = window.innerHeight - uiHeight - 40; // Extra padding
+        const availableWidth = window.innerWidth;
 
-        // Set canvas size - ensure minimum height for proper rendering
-        if (window.innerWidth < 768) {
-            // Mobile/tablet
-            this.canvas.width = Math.min(1200, rect.width || window.innerWidth);
-            this.canvas.height = Math.max(500, Math.min(availableHeight, 800));
+        // Detect orientation
+        const isLandscape = availableWidth > availableHeight;
+
+        // Set canvas size based on orientation
+        if (isLandscape) {
+            // Landscape: prioritize width, adjust height to fit
+            this.canvas.width = Math.min(1200, availableWidth);
+            this.canvas.height = Math.max(400, Math.min(availableHeight, 600));
         } else {
-            // Desktop
-            this.canvas.width = Math.min(1200, rect.width);
-            this.canvas.height = Math.min(800, Math.max(500, rect.height));
+            // Portrait: prioritize height with minimum for proper rendering
+            this.canvas.width = Math.min(1200, rect.width || availableWidth);
+            this.canvas.height = Math.max(500, Math.min(availableHeight, 800));
         }
 
-        console.log('Canvas resized:', this.canvas.width, 'x', this.canvas.height);
+        console.log('Canvas resized:', this.canvas.width, 'x', this.canvas.height, 'Orientation:', isLandscape ? 'landscape' : 'portrait');
     }
 
     setupInput() {
@@ -200,8 +204,8 @@ class Game {
         // Draw current kerb (with puppy position for parallax scrolling)
         const currentKerb = this.kerbManager.getCurrentKerb();
         if (currentKerb) {
-            const showZones = this.puppy.state === 'walking';
-            currentKerb.draw(this.ctx, showZones, this.puppy.x);
+            // Don't show stop zone indicators (removed visual clutter)
+            currentKerb.draw(this.ctx, false, this.puppy.x);
         }
 
         // Draw puppy
