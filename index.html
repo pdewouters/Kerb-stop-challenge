@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#FFB84D">
+
+    <!-- SEO and Social Sharing -->
+    <title>Guide Dog Training: Kerb Stop Challenge</title>
+    <meta name="description" content="Help train a guide dog puppy! Test your timing in this fun kerb stop challenge game.">
+
+    <meta property="og:title" content="Guide Dog Training Challenge">
+    <meta property="og:description" content="Help train a guide dog puppy! Test your timing in this fun kerb stop challenge.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://kerb-stop-challenge.netlify.app">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Guide Dog Training Challenge">
+    <meta name="twitter:description" content="Help train a guide dog puppy! Test your timing in this fun kerb stop challenge.">
+
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Start Screen -->
+        <div id="startScreen" class="screen active">
+            <div class="container">
+                <h1>🐕‍🦺 Guide Dog Training</h1>
+                <h2>Kerb Stop Challenge</h2>
+                <div class="puppy-intro">🐕</div>
+                <div class="instructions">
+                    <p>Help train a guide dog puppy to stop at kerbs!</p>
+                    <p><strong>Press SPACE or TAP</strong> to stop at the right time.</p>
+                    <p>Perfect timing = successful training!</p>
+                </div>
+                <button id="startButton" class="btn btn-primary">Start Training</button>
+                <div class="info-box">
+                    <p>It costs <strong>£56,000</strong> to train a guide dog.</p>
+                    <p>Every game helps raise awareness!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="gameScreen" class="screen">
+            <div id="gameUI">
+                <div class="ui-top">
+                    <div class="progress-container">
+                        <span id="progressText">Kerb: 1/10</span>
+                        <div id="progressHearts"></div>
+                    </div>
+                    <div class="score-container">
+                        <span id="scoreText">Score: 0</span>
+                    </div>
+                </div>
+                <div class="ui-controls">
+                    <button id="pauseButton" class="btn-icon">⏸️</button>
+                    <button id="muteButton" class="btn-icon">🔊</button>
+                </div>
+            </div>
+
+            <canvas id="gameCanvas"></canvas>
+
+            <div id="instruction" class="instruction-text">
+                Press SPACE or TAP to stop at the kerb
+            </div>
+
+            <div id="feedback" class="feedback-text"></div>
+        </div>
+
+        <!-- Complete Screen -->
+        <div id="completeScreen" class="screen">
+            <div class="container">
+                <h1 id="completeTitle">Training Complete!</h1>
+                <div class="final-score">
+                    <div id="gradeEmoji" class="grade-emoji">⭐⭐⭐</div>
+                    <h2 id="gradeText">Qualified Guide Dog!</h2>
+                    <div class="score-display">
+                        <span id="finalScore">100</span>
+                        <span class="score-max">/100</span>
+                    </div>
+                </div>
+
+                <div class="buttons-container">
+                    <button id="playAgainButton" class="btn btn-primary">Play Again</button>
+                    <button id="donateButton" class="btn btn-secondary">Support Guide Dogs 💛</button>
+                    <button id="shareButton" class="btn btn-outline">Share Your Score</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Donation Modal -->
+        <div id="donationModal" class="modal">
+            <div class="modal-content">
+                <button class="modal-close" id="closeModal">&times;</button>
+                <div class="modal-header">
+                    <div class="puppy-grad">🐕‍🦺🎓</div>
+                    <h2>Help Train Real Guide Dogs</h2>
+                </div>
+                <div class="modal-body">
+                    <p class="impact-text">
+                        It costs <strong>£56,000</strong> to train a guide dog like this puppy.
+                    </p>
+                    <p id="personalMessage" class="personal-message">
+                        Your score helped master kerb stops!
+                    </p>
+
+                    <div class="donation-amounts">
+                        <a href="https://www.guidedogs.org.uk/donate?amount=5&utm_source=kerb_challenge&utm_medium=game&utm_campaign=kerb_stop_game"
+                           target="_blank" rel="noopener" class="btn-amount">£5</a>
+                        <a href="https://www.guidedogs.org.uk/donate?amount=15&utm_source=kerb_challenge&utm_medium=game&utm_campaign=kerb_stop_game"
+                           target="_blank" rel="noopener" class="btn-amount">£15</a>
+                        <a href="https://www.guidedogs.org.uk/donate?amount=50&utm_source=kerb_challenge&utm_medium=game&utm_campaign=kerb_stop_game"
+                           target="_blank" rel="noopener" class="btn-amount">£50</a>
+                        <a href="https://www.guidedogs.org.uk/donate?utm_source=kerb_challenge&utm_medium=game&utm_campaign=kerb_stop_game"
+                           target="_blank" rel="noopener" class="btn-amount">Custom</a>
+                    </div>
+
+                    <button id="maybeLater" class="btn btn-text">Maybe Later</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Share Modal -->
+        <div id="shareModal" class="modal">
+            <div class="modal-content">
+                <button class="modal-close" id="closeShareModal">&times;</button>
+                <div class="modal-header">
+                    <h2>Share Your Score!</h2>
+                </div>
+                <div class="modal-body">
+                    <p>Help spread the word about guide dog training!</p>
+
+                    <div class="share-buttons">
+                        <button id="shareTwitter" class="btn-share twitter">
+                            🐦 Twitter
+                        </button>
+                        <button id="shareFacebook" class="btn-share facebook">
+                            📘 Facebook
+                        </button>
+                        <button id="shareWhatsApp" class="btn-share whatsapp">
+                            💬 WhatsApp
+                        </button>
+                        <button id="copyLink" class="btn-share copy">
+                            🔗 Copy Link
+                        </button>
+                    </div>
+
+                    <div id="copyFeedback" class="copy-feedback">Link copied!</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/utils.js"></script>
+    <script src="js/audio.js"></script>
+    <script src="js/puppy.js"></script>
+    <script src="js/kerb.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/game.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
