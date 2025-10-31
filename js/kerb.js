@@ -33,19 +33,19 @@ class Kerb {
     }
 
     configureZones() {
-        // Adjust zone sizes based on difficulty
+        // Adjust zone sizes based on difficulty (made much more generous)
         if (this.difficulty === 1) {
-            // Easy: Large zones
-            this.stopZoneSize = 80;
-            this.perfectZoneSize = 30;
+            // Easy: Very large zones
+            this.stopZoneSize = 150;
+            this.perfectZoneSize = 50;
         } else if (this.difficulty === 2) {
-            // Medium: Medium zones
-            this.stopZoneSize = 60;
-            this.perfectZoneSize = 20;
+            // Medium: Large zones
+            this.stopZoneSize = 120;
+            this.perfectZoneSize = 40;
         } else {
-            // Hard: Small zones
-            this.stopZoneSize = 50;
-            this.perfectZoneSize = 15;
+            // Hard: Medium zones
+            this.stopZoneSize = 100;
+            this.perfectZoneSize = 30;
         }
 
         // Zone boundaries (relative to kerb position)
@@ -69,25 +69,36 @@ class Kerb {
         // Draw sky/buildings background
         this.drawBackground(ctx, pavementHeight);
 
-        // Draw pavement (left side)
-        ctx.fillStyle = this.colorPavement;
+        // Draw pavement (left side) with better color
+        const pavementGradient = ctx.createLinearGradient(0, pavementHeight, 0, this.canvasHeight);
+        pavementGradient.addColorStop(0, '#D3D3D3');
+        pavementGradient.addColorStop(1, '#BEBEBE');
+        ctx.fillStyle = pavementGradient;
         ctx.fillRect(0, pavementHeight, this.x, this.canvasHeight - pavementHeight);
 
-        // Pavement texture (simple grid)
-        ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
-        ctx.lineWidth = 1;
-        const gridSize = 30;
-        for (let x = 0; x < this.x; x += gridSize) {
-            ctx.beginPath();
-            ctx.moveTo(x, pavementHeight);
-            ctx.lineTo(x, this.canvasHeight);
-            ctx.stroke();
-        }
-        for (let y = pavementHeight; y < this.canvasHeight; y += gridSize) {
+        // Pavement texture (subtle paving slabs)
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.08)';
+        ctx.lineWidth = 2;
+        const slabWidth = 60;
+        const slabHeight = 40;
+
+        // Draw horizontal lines (slab rows)
+        for (let y = pavementHeight; y < this.canvasHeight; y += slabHeight) {
             ctx.beginPath();
             ctx.moveTo(0, y);
             ctx.lineTo(this.x, y);
             ctx.stroke();
+        }
+
+        // Draw vertical lines (offset every other row for realistic paving)
+        for (let y = pavementHeight; y < this.canvasHeight; y += slabHeight) {
+            const offset = (Math.floor((y - pavementHeight) / slabHeight) % 2) * (slabWidth / 2);
+            for (let x = offset; x < this.x; x += slabWidth) {
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(x, Math.min(y + slabHeight, this.canvasHeight));
+                ctx.stroke();
+            }
         }
 
         // Draw road (right side)
@@ -357,17 +368,18 @@ class KerbManager {
 
     generateKerbs() {
         // Generate 10 kerbs with increasing difficulty
+        // Moved closer (more left) for better balance between pavement and road
         const kerbPositions = [
-            { x: 800, difficulty: 1 },   // Kerb 1
-            { x: 800, difficulty: 1 },   // Kerb 2
-            { x: 800, difficulty: 1 },   // Kerb 3
-            { x: 850, difficulty: 2 },   // Kerb 4
-            { x: 850, difficulty: 2 },   // Kerb 5
-            { x: 850, difficulty: 2 },   // Kerb 6
-            { x: 850, difficulty: 2 },   // Kerb 7
-            { x: 900, difficulty: 3 },   // Kerb 8
-            { x: 900, difficulty: 3 },   // Kerb 9
-            { x: 900, difficulty: 3 }    // Kerb 10
+            { x: 500, difficulty: 1 },   // Kerb 1
+            { x: 500, difficulty: 1 },   // Kerb 2
+            { x: 500, difficulty: 1 },   // Kerb 3
+            { x: 520, difficulty: 2 },   // Kerb 4
+            { x: 520, difficulty: 2 },   // Kerb 5
+            { x: 520, difficulty: 2 },   // Kerb 6
+            { x: 520, difficulty: 2 },   // Kerb 7
+            { x: 550, difficulty: 3 },   // Kerb 8
+            { x: 550, difficulty: 3 },   // Kerb 9
+            { x: 550, difficulty: 3 }    // Kerb 10
         ];
 
         this.kerbs = kerbPositions.map(config =>

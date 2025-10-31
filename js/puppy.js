@@ -37,6 +37,11 @@ class Puppy {
         this.image.onload = () => {
             this.imageLoaded = true;
             console.log('✅ Puppy image loaded successfully from:', this.image.src);
+
+            // Once walking image loads, try sitting image from same path
+            const sittingPath = this.imagePaths[this.imageAttempts].replace('dog.png', 'dog-sitting.png');
+            this.imageSitting.src = sittingPath;
+            console.log('📸 Loading sitting image from:', sittingPath);
         };
 
         this.image.onerror = (err) => {
@@ -68,9 +73,7 @@ class Puppy {
             console.log('ℹ️ Sitting image not available, will use walking image for all states');
             this.imageSittingLoaded = false;
         };
-
-        // Try to load sitting image (best effort, no retries needed)
-        this.imageSitting.src = this.imagePaths[0].replace('dog.png', 'dog-sitting.png');
+        // Sitting image source will be set once walking image loads successfully
 
         // Fallback colors (if image fails) - BRIGHT and visible!
         this.colorBody = '#FFD700'; // Bright gold
