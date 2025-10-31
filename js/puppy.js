@@ -24,62 +24,43 @@ class Puppy {
         // Bounce animation for walking
         this.bounceOffset = 0;
 
-        // Images - walking and sitting
-        this.imageWalking = new Image();
-        this.imageSitting = new Image();
-        this.imagesLoaded = 0;
-        this.imagePathIndex = 0;
-
-        // Multiple paths to try (for different deployment scenarios)
-        this.basePaths = [
-            'assets/images/',
-            './assets/images/',
-            '/Kerb-stop-challenge/assets/images/'
+        // Image
+        this.image = new Image();
+        this.imageLoaded = false;
+        this.imageAttempts = 0;
+        this.imagePaths = [
+            'assets/images/dog.png',
+            './assets/images/dog.png',
+            '/Kerb-stop-challenge/assets/images/dog.png', // GitHub Pages path
         ];
 
-        // Load walking image
-        this.imageWalking.onload = () => {
-            this.imagesLoaded++;
-            console.log('✅ Walking puppy image loaded:', this.imageWalking.src);
-        };
-        this.imageWalking.onerror = () => {
-            console.error('❌ Failed to load walking puppy image from:', this.imageWalking.src);
-            this.tryNextImagePath();
+        this.image.onload = () => {
+            this.imageLoaded = true;
+            console.log('✅ Puppy image loaded successfully from:', this.image.src);
         };
 
-        // Load sitting image
-        this.imageSitting.onload = () => {
-            this.imagesLoaded++;
-            console.log('✅ Sitting puppy image loaded:', this.imageSitting.src);
-        };
-        this.imageSitting.onerror = () => {
-            console.error('❌ Failed to load sitting puppy image from:', this.imageSitting.src);
-            this.tryNextImagePath();
+        this.image.onerror = (err) => {
+            console.error('❌ Failed to load puppy image from:', this.image.src);
+            this.imageAttempts++;
+
+            // Try next path
+            if (this.imageAttempts < this.imagePaths.length) {
+                console.log('🔄 Trying alternate path...');
+                this.image.src = this.imagePaths[this.imageAttempts];
+            } else {
+                console.error('❌ All image paths failed. Using placeholder.');
+                this.imageLoaded = false;
+            }
         };
 
-        // Start loading both images (try first path)
-        this.imageWalking.src = this.basePaths[0] + 'dog.png';
-        this.imageSitting.src = this.basePaths[0] + 'dog-sitting.png';
-
-        console.log('📸 Loading dog images from:', this.basePaths[0]);
+        // Start loading with first path
+        this.image.src = this.imagePaths[0];
+        console.log('📸 Loading puppy image from:', this.image.src);
 
         // Fallback colors (if image fails) - BRIGHT and visible!
         this.colorBody = '#FFD700'; // Bright gold
         this.colorDark = '#FF6B00'; // Bright orange
         this.colorLight = '#FFFFFF';
-    }
-
-    tryNextImagePath() {
-        this.imagePathIndex++;
-        if (this.imagePathIndex < this.basePaths.length) {
-            console.log('🔄 Trying alternate path:', this.basePaths[this.imagePathIndex]);
-            // Reset counter and try again
-            this.imagesLoaded = 0;
-            this.imageWalking.src = this.basePaths[this.imagePathIndex] + 'dog.png';
-            this.imageSitting.src = this.basePaths[this.imagePathIndex] + 'dog-sitting.png';
-        } else {
-            console.error('❌ All image paths failed. Using placeholder graphics.');
-        }
     }
 
     update(deltaTime = 1) {
@@ -118,8 +99,8 @@ class Puppy {
 
     // Draw the puppy on canvas
     draw(ctx) {
-        if (this.imagesLoaded < 2) {
-            // Draw a simple placeholder while images load
+        if (!this.imageLoaded) {
+            // Draw a simple placeholder while image loads
             this.drawPlaceholder(ctx);
             return;
         }
@@ -129,28 +110,24 @@ class Puppy {
 
         // Calculate position based on state
         let yOffset = 0;
-        let currentImage;
 
-        if (this.state === 'walking') {
-            // Walking: use walking image with bounce
-            currentImage = this.imageWalking;
+        if (this.state === 'walking' || this.state === 'sitting') {
+            // Walking: slight bounce
             yOffset = this.bounceOffset;
-        } else if (this.state === 'sitting') {
-            // Transitioning to sitting: blend between images
-            currentImage = this.sitProgress < 0.5 ? this.imageWalking : this.imageSitting;
-            yOffset = this.sitProgress * 10;
+
+            // During sitting transition, lower the dog
+            yOffset += this.sitProgress * 10;
         } else if (this.state === 'stopped') {
-            // Fully stopped: use sitting image
-            currentImage = this.imageSitting;
+            // Sitting: lower position
             yOffset = 10;
         }
 
-        // Draw the appropriate image
+        // Draw the image (no cropping needed - clean image!)
         const drawWidth = this.width;
-        const drawHeight = (currentImage.height / currentImage.width) * drawWidth;
+        const drawHeight = (this.image.height / this.image.width) * drawWidth;
 
         ctx.drawImage(
-            currentImage,
+            this.image,
             -drawWidth / 2, -drawHeight / 2 + yOffset,  // Dest x, y (centered)
             drawWidth, drawHeight  // Dest width, height
         );
