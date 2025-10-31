@@ -45,7 +45,12 @@ class Game {
         setupTouchControls();
 
         // Resize canvas on window resize
-        window.addEventListener('resize', () => this.resizeCanvas());
+        window.addEventListener('resize', () => {
+            this.resizeCanvas();
+            if (this.state === 'start') {
+                this.renderStartScreen();
+            }
+        });
 
         // Load audio
         this.audioManager.loadSounds();
@@ -57,7 +62,8 @@ class Game {
         // Setup input handlers
         this.setupInput();
 
-        // Show start screen
+        // Render and show start screen
+        this.renderStartScreen();
         ScreenManager.show('startScreen');
     }
 
@@ -384,5 +390,73 @@ class Game {
             this.gameLoop();
             this.uiManager.showPauseOverlay(false);
         }
+    }
+
+    renderStartScreen() {
+        const startCanvas = document.getElementById('startCanvas');
+        if (!startCanvas) return;
+
+        const ctx = startCanvas.getContext('2d');
+
+        // Set canvas size
+        startCanvas.width = window.innerWidth;
+        startCanvas.height = window.innerHeight;
+
+        // Create a static scene similar to the game
+        const canvasWidth = startCanvas.width;
+        const canvasHeight = startCanvas.height;
+
+        // Sky gradient
+        const gradient = ctx.createLinearGradient(0, 0, 0, canvasHeight);
+        gradient.addColorStop(0, '#87CEEB');
+        gradient.addColorStop(1, '#E0F6FF');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+        // Create a temporary kerb object for drawing background
+        const pavementHeight = canvasHeight * 0.6;
+        const tempKerb = new Kerb(canvasWidth * 0.6, canvasWidth, canvasHeight, 1);
+
+        // Draw the background scene (buildings, trees, clouds)
+        tempKerb.drawBackground(ctx, pavementHeight);
+
+        // Draw pavement
+        const pavementGradient = ctx.createLinearGradient(0, pavementHeight, 0, canvasHeight);
+        pavementGradient.addColorStop(0, '#D3D3D3');
+        pavementGradient.addColorStop(1, '#BEBEBE');
+        ctx.fillStyle = pavementGradient;
+        ctx.fillRect(0, pavementHeight, canvasWidth * 0.6, canvasHeight - pavementHeight);
+
+        // Pavement texture
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.08)';
+        ctx.lineWidth = 2;
+        const slabWidth = 60;
+        const slabHeight = 40;
+        for (let y = pavementHeight; y < canvasHeight; y += slabHeight) {
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(canvasWidth * 0.6, y);
+            ctx.stroke();
+        }
+
+        // Draw road
+        ctx.fillStyle = '#4A4A4A';
+        ctx.fillRect(canvasWidth * 0.6, pavementHeight, canvasWidth * 0.4, canvasHeight - pavementHeight);
+
+        // Draw kerb edge
+        ctx.fillStyle = '#FFD700';
+        ctx.fillRect(canvasWidth * 0.6 - 5, pavementHeight - 5, 10, 5);
+
+        // Draw traffic light
+        tempKerb.drawTrafficLight(ctx, canvasWidth * 0.6 - 60, pavementHeight - 120);
+
+        // Draw a dog on the pavement
+        const dogImg = new Image();
+        dogImg.src = 'assets/images/dog.png';
+        dogImg.onload = () => {
+            const dogWidth = 100;
+            const dogHeight = (dogImg.height / dogImg.width) * dogWidth;
+            ctx.drawImage(dogImg, canvasWidth * 0.3, canvasHeight * 0.7 - dogHeight / 2, dogWidth, dogHeight);
+        };
     }
 }

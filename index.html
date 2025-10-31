@@ -26,19 +26,21 @@
     <div id="app">
         <!-- Start Screen -->
         <div id="startScreen" class="screen active">
-            <div class="container">
-                <h1>🐕‍🦺 Guide Dog Training</h1>
-                <h2>Kerb Stop Challenge</h2>
-                <div class="puppy-intro">🐕</div>
-                <div class="instructions">
-                    <p>Help train a guide dog puppy to stop at kerbs!</p>
-                    <p><strong>Press SPACE or TAP</strong> to stop at the right time.</p>
-                    <p>Perfect timing = successful training!</p>
+            <canvas id="startCanvas"></canvas>
+            <div class="start-overlay">
+                <div class="game-title">
+                    <h1>GUIDE DOG TRAINING</h1>
+                    <h2>Kerb Stop Challenge</h2>
                 </div>
-                <button id="startButton" class="btn btn-primary">Start Training</button>
-                <div class="info-box">
-                    <p>It costs <strong>£56,000</strong> to train a guide dog.</p>
-                    <p>Every game helps raise awareness!</p>
+                <div class="start-instructions">
+                    <p>🎮 Help train a guide dog puppy!</p>
+                    <p>⏱️ Press SPACE or TAP to stop at kerbs</p>
+                    <p>⭐ Perfect timing = Perfect training!</p>
+                </div>
+                <button id="startButton" class="btn btn-start">START TRAINING</button>
+                <div class="start-info">
+                    <p>💛 It costs £56,000 to train a guide dog</p>
+                    <p>🐕‍🦺 Help raise awareness for Guide Dogs UK</p>
                 </div>
             </div>
         </div>
