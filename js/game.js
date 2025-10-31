@@ -124,8 +124,12 @@ class Game {
 
     startGame() {
         // Initialize game objects
-        // Puppy at 70% down canvas (on the pavement, which starts at 60%)
-        this.puppy = new Puppy(100, this.canvas.height * 0.70);
+        // Puppy position adjusted for screen size/orientation
+        const isSmallLandscape = this.canvas.width > this.canvas.height && this.canvas.height < 500;
+        const puppyY = isSmallLandscape
+            ? this.canvas.height * 0.55  // Closer to horizon on small landscape
+            : this.canvas.height * 0.70; // Normal position on other screens
+        this.puppy = new Puppy(100, puppyY);
         this.kerbManager = new KerbManager(this.canvas.width, this.canvas.height);
 
         // Reset game state

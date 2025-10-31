@@ -65,8 +65,12 @@ class Kerb {
     }
 
     draw(ctx, showZones = true, puppyX = 0) {
-        // Pavement takes up bottom 40% of canvas, sky/buildings top 60%
-        const pavementHeight = this.canvasHeight * 0.6;
+        // Adjust pavement height based on screen orientation and size
+        // For small landscape screens (like iPhone landscape), move view closer to ground
+        const isSmallLandscape = this.canvasWidth > this.canvasHeight && this.canvasHeight < 500;
+        const pavementHeight = isSmallLandscape
+            ? this.canvasHeight * 0.35  // 35% sky, 65% ground - closer to ground level
+            : this.canvasHeight * 0.6;   // 60% sky, 40% ground - normal view
         const roadHeight = this.canvasHeight - pavementHeight;
 
         // Update background offset based on puppy movement (parallax scrolling)
