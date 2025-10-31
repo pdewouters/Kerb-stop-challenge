@@ -28,42 +28,58 @@ class Puppy {
         this.imageWalking = new Image();
         this.imageSitting = new Image();
         this.imagesLoaded = 0;
+        this.imagePathIndex = 0;
 
-        // Load walking image
-        this.imageWalking.onload = () => {
-            this.imagesLoaded++;
-            console.log('✅ Walking puppy image loaded');
-        };
-        this.imageWalking.onerror = () => {
-            console.error('❌ Failed to load walking puppy image');
-        };
-
-        // Load sitting image
-        this.imageSitting.onload = () => {
-            this.imagesLoaded++;
-            console.log('✅ Sitting puppy image loaded');
-        };
-        this.imageSitting.onerror = () => {
-            console.error('❌ Failed to load sitting puppy image');
-        };
-
-        // Try multiple paths for each image
-        const basePaths = [
+        // Multiple paths to try (for different deployment scenarios)
+        this.basePaths = [
             'assets/images/',
             './assets/images/',
             '/Kerb-stop-challenge/assets/images/'
         ];
 
-        // Start loading both images (try first path)
-        this.imageWalking.src = basePaths[0] + 'dog.png';
-        this.imageSitting.src = basePaths[0] + 'dog-sitting.png';
+        // Load walking image
+        this.imageWalking.onload = () => {
+            this.imagesLoaded++;
+            console.log('✅ Walking puppy image loaded:', this.imageWalking.src);
+        };
+        this.imageWalking.onerror = () => {
+            console.error('❌ Failed to load walking puppy image from:', this.imageWalking.src);
+            this.tryNextImagePath();
+        };
 
-        console.log('📸 Loading dog images...');
+        // Load sitting image
+        this.imageSitting.onload = () => {
+            this.imagesLoaded++;
+            console.log('✅ Sitting puppy image loaded:', this.imageSitting.src);
+        };
+        this.imageSitting.onerror = () => {
+            console.error('❌ Failed to load sitting puppy image from:', this.imageSitting.src);
+            this.tryNextImagePath();
+        };
+
+        // Start loading both images (try first path)
+        this.imageWalking.src = this.basePaths[0] + 'dog.png';
+        this.imageSitting.src = this.basePaths[0] + 'dog-sitting.png';
+
+        console.log('📸 Loading dog images from:', this.basePaths[0]);
 
         // Fallback colors (if image fails) - BRIGHT and visible!
         this.colorBody = '#FFD700'; // Bright gold
         this.colorDark = '#FF6B00'; // Bright orange
         this.colorLight = '#FFFFFF';
+    }
+
+    tryNextImagePath() {
+        this.imagePathIndex++;
+        if (this.imagePathIndex < this.basePaths.length) {
+            console.log('🔄 Trying alternate path:', this.basePaths[this.imagePathIndex]);
+            // Reset counter and try again
+            this.imagesLoaded = 0;
+            this.imageWalking.src = this.basePaths[this.imagePathIndex] + 'dog.png';
+            this.imageSitting.src = this.basePaths[this.imagePathIndex] + 'dog-sitting.png';
+        } else {
+            console.error('❌ All image paths failed. Using placeholder graphics.');
+        }
     }
 
     update(deltaTime = 1) {
