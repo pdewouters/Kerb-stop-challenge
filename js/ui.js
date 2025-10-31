@@ -195,12 +195,6 @@ class UIManager {
             this.elements.completeTitle.textContent = 'Training Complete!';
         }
 
-        // Update score in donation modal
-        const modalScoreElement = document.getElementById('modalScore');
-        if (modalScoreElement) {
-            modalScoreElement.textContent = score;
-        }
-
         ScreenManager.show('completeScreen');
     }
 
