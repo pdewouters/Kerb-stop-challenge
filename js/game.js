@@ -125,9 +125,10 @@ class Game {
     startGame() {
         // Initialize game objects
         // Puppy position adjusted for screen size/orientation
+        // With 25% sky / 75% ground on small landscape, position puppy in visible ground area
         const isSmallLandscape = this.canvas.width > this.canvas.height && this.canvas.height < 500;
         const puppyY = isSmallLandscape
-            ? this.canvas.height * 0.55  // Closer to horizon on small landscape
+            ? this.canvas.height * 0.45  // Position in middle of ground area (viewport is at 25%)
             : this.canvas.height * 0.70; // Normal position on other screens
         this.puppy = new Puppy(100, puppyY);
         this.kerbManager = new KerbManager(this.canvas.width, this.canvas.height);
@@ -412,7 +413,12 @@ class Game {
 
             const canvasWidth = startCanvas.width;
             const canvasHeight = startCanvas.height;
-            const pavementHeight = canvasHeight * 0.6;
+
+            // Use same viewport logic as game screen
+            const isSmallLandscape = canvasWidth > canvasHeight && canvasHeight < 500;
+            const pavementHeight = isSmallLandscape
+                ? canvasHeight * 0.25  // 25% sky, 75% ground for small landscape
+                : canvasHeight * 0.6;   // 60% sky, 40% ground for normal screens
 
             // Sky gradient
             const gradient = ctx.createLinearGradient(0, 0, 0, canvasHeight);
@@ -463,7 +469,11 @@ class Game {
             dogImg.onload = () => {
                 const dogWidth = 100;
                 const dogHeight = (dogImg.height / dogImg.width) * dogWidth;
-                ctx.drawImage(dogImg, canvasWidth * 0.3, canvasHeight * 0.7 - dogHeight / 2, dogWidth, dogHeight);
+                // Position dog based on viewport - in ground area
+                const dogY = isSmallLandscape
+                    ? canvasHeight * 0.45 - dogHeight / 2  // Match game screen position
+                    : canvasHeight * 0.7 - dogHeight / 2;
+                ctx.drawImage(dogImg, canvasWidth * 0.3, dogY, dogWidth, dogHeight);
             };
             dogImg.src = 'assets/images/dog.png';
         } catch (error) {

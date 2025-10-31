@@ -66,15 +66,16 @@ class Kerb {
 
     draw(ctx, showZones = true, puppyX = 0) {
         // Adjust pavement height based on screen orientation and size
-        // For small landscape screens (like iPhone landscape), move view closer to ground
+        // For small landscape screens (like iPhone landscape), move view much closer to ground
         const isSmallLandscape = this.canvasWidth > this.canvasHeight && this.canvasHeight < 500;
         const pavementHeight = isSmallLandscape
-            ? this.canvasHeight * 0.35  // 35% sky, 65% ground - closer to ground level
+            ? this.canvasHeight * 0.25  // 25% sky, 75% ground - very close to ground level
             : this.canvasHeight * 0.6;   // 60% sky, 40% ground - normal view
         const roadHeight = this.canvasHeight - pavementHeight;
 
         // Update background offset based on puppy movement (parallax scrolling)
-        this.backgroundOffset = puppyX * 0.3; // Buildings move slower than puppy
+        // All background elements (buildings, trees, traffic light) move together
+        this.backgroundOffset = puppyX * 0.3; // Background moves slower than puppy
 
         // Draw sky/buildings background
         this.drawBackground(ctx, pavementHeight);
@@ -128,8 +129,9 @@ class Kerb {
         // Draw kerb edge
         this.drawKerbEdge(ctx, pavementHeight);
 
-        // Draw traffic light near kerb
-        this.drawTrafficLight(ctx, this.x - 60, pavementHeight - 120);
+        // Draw traffic light near kerb with parallax scrolling
+        const trafficLightX = this.x - 60 - this.backgroundOffset;
+        this.drawTrafficLight(ctx, trafficLightX, pavementHeight - 120);
 
         // Draw stop zones (if showing)
         if (showZones) {
@@ -159,21 +161,25 @@ class Kerb {
         const zoneBottom = pavementHeight;
         const pulse = Math.sin(this.pulseTime) * 0.2 + 0.8;
 
+        // Apply parallax offset to zones so they move with traffic light
+        const stopZoneX = this.stopZoneStart - this.backgroundOffset;
+        const perfectZoneX = this.perfectZoneStart - this.backgroundOffset;
+
         // Good stop zone
         ctx.fillStyle = this.colorStopZone;
         ctx.globalAlpha = 0.3 * pulse;
-        ctx.fillRect(this.stopZoneStart, zoneTop, this.stopZoneSize, zoneBottom);
+        ctx.fillRect(stopZoneX, zoneTop, this.stopZoneSize, zoneBottom);
 
         // Perfect stop zone (darker/brighter)
         ctx.fillStyle = this.colorPerfectZone;
         ctx.globalAlpha = 0.4 * pulse;
-        ctx.fillRect(this.perfectZoneStart, zoneTop, this.perfectZoneSize, zoneBottom);
+        ctx.fillRect(perfectZoneX, zoneTop, this.perfectZoneSize, zoneBottom);
 
         ctx.globalAlpha = 1.0;
 
         // Zone indicators
-        this.drawZoneIndicator(ctx, this.stopZoneStart, zoneBottom, 'STOP ZONE', '#4CAF50');
-        this.drawZoneIndicator(ctx, this.perfectZoneStart, zoneBottom + 30, 'PERFECT', '#2E7D32');
+        this.drawZoneIndicator(ctx, stopZoneX, zoneBottom, 'STOP ZONE', '#4CAF50');
+        this.drawZoneIndicator(ctx, perfectZoneX, zoneBottom + 30, 'PERFECT', '#2E7D32');
     }
 
     drawZoneIndicator(ctx, x, y, text, color) {
