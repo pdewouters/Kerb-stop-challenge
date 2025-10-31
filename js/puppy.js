@@ -29,12 +29,15 @@ class Puppy {
         this.imageLoaded = false;
         this.image.onload = () => {
             this.imageLoaded = true;
+            console.log('✅ Puppy image loaded successfully!');
         };
-        this.image.onerror = () => {
-            console.warn('Failed to load puppy image, using fallback');
+        this.image.onerror = (err) => {
+            console.error('❌ Failed to load puppy image from:', this.image.src);
+            console.error('Error:', err);
             this.imageLoaded = false;
         };
         this.image.src = 'assets/images/28599.jpg';
+        console.log('📸 Loading puppy image from:', this.image.src);
 
         // Fallback colors (if image fails)
         this.colorBody = '#E8C39E';
