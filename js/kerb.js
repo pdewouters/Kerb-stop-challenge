@@ -325,8 +325,10 @@ class Kerb {
             return 'perfect';
         } else if (puppyX >= this.stopZoneStart && puppyX <= this.stopZoneEnd) {
             return 'good';
+        } else if (puppyX < this.stopZoneStart) {
+            return 'too-early';
         } else {
-            return 'miss';
+            return 'too-late';
         }
     }
 
@@ -350,9 +352,13 @@ class Kerb {
                 score = 5;
                 message = 'Good Stop! ✓';
                 break;
-            case 'miss':
+            case 'too-early':
                 score = 0;
                 message = 'Too Early! ✗';
+                break;
+            case 'too-late':
+                score = 0;
+                message = 'Too Late! ✗';
                 break;
         }
 
