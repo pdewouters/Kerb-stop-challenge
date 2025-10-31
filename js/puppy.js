@@ -29,9 +29,9 @@ class Puppy {
         this.imageLoaded = false;
         this.imageAttempts = 0;
         this.imagePaths = [
-            'assets/images/28599.jpg',
-            './assets/images/28599.jpg',
-            '/Kerb-stop-challenge/assets/images/28599.jpg', // GitHub Pages path
+            'assets/images/Labrador.jpg',
+            './assets/images/Labrador.jpg',
+            '/Kerb-stop-challenge/assets/images/Labrador.jpg', // GitHub Pages path
         ];
 
         this.image.onload = () => {
@@ -125,10 +125,8 @@ class Puppy {
         ctx.save();
         ctx.translate(this.x, this.y);
 
-        // Calculate scale and position based on state
-        let scale = 1.0;
+        // Calculate position based on state
         let yOffset = 0;
-        let cropBottom = 0; // How much to crop from bottom (for "Labrador" text)
 
         if (this.state === 'walking' || this.state === 'sitting') {
             // Walking: slight bounce
@@ -141,17 +139,12 @@ class Puppy {
             yOffset = 10;
         }
 
-        // Crop the "Labrador" text from bottom (roughly 15% of image)
-        const cropHeight = this.image.height * 0.85;
-
-        // Draw the image
+        // Draw the image (no cropping needed - clean image!)
         const drawWidth = this.width;
-        const drawHeight = (cropHeight / this.image.width) * drawWidth;
+        const drawHeight = (this.image.height / this.image.width) * drawWidth;
 
         ctx.drawImage(
             this.image,
-            0, 0,  // Source x, y
-            this.image.width, cropHeight,  // Source width, height (crop bottom)
             -drawWidth / 2, -drawHeight / 2 + yOffset,  // Dest x, y (centered)
             drawWidth, drawHeight  // Dest width, height
         );
