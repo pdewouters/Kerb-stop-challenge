@@ -12,22 +12,21 @@ class Kerb {
         // Continuous scrolling world offset
         this.worldOffset = 0;
 
-        // Background image
+        // Background image - full street scene
         this.backgroundImage = new Image();
         this.backgroundLoaded = false;
         this.backgroundImage.onload = () => {
             this.backgroundLoaded = true;
-            console.log('✅ Background image loaded');
+            console.log('✅ Background image loaded:', this.backgroundImage.width, 'x', this.backgroundImage.height);
         };
         this.backgroundImage.onerror = () => {
             console.error('❌ Failed to load background image');
         };
-        this.backgroundImage.src = 'assets/images/IMG_0287.jpeg';
+        this.backgroundImage.src = 'assets/images/FAA4CCA7-41BA-4745-A689-15D3DFDF36AA.jpeg';
 
-        // Pattern dimensions based on where we want traffic lights
-        // The background will repeat seamlessly
-        this.patternWidth = 1100;  // Distance between traffic lights
-        this.trafficLightPosition = 550; // Middle of pattern
+        // Pattern dimensions - traffic lights appear at regular intervals
+        this.patternWidth = 1200;  // Distance between traffic lights
+        this.trafficLightPosition = 600; // Middle of pattern
 
         // Track if player has passed an intersection without stopping
         this.lastCheckedIntersection = -1;
@@ -94,43 +93,21 @@ class Kerb {
     }
 
     draw(ctx, showZones = true, puppyX = 0) {
-        // ALWAYS show the bottom portion - this is where the dog is
-        // Viewport is anchored to bottom regardless of screen size
-        const groundHeight = this.canvasHeight * 0.4;  // Show 40% ground
-        const skyHeight = this.canvasHeight - groundHeight;  // Rest is sky
-
-        // Draw sky with clouds
-        this.drawSky(ctx, skyHeight, this.worldOffset * 0.5);
-
-        // Draw repeating background image
-        this.drawBackgroundImage(ctx, skyHeight, this.canvasHeight);
+        // Draw full-screen background image
+        this.drawBackgroundImage(ctx);
 
         // Draw traffic lights and stop zones on top
-        this.drawTrafficLights(ctx, skyHeight, groundHeight, showZones, puppyX);
+        // Traffic lights should be on the pavement (around 80% down the screen based on the image)
+        const pavementY = this.canvasHeight * 0.8;
+        this.drawTrafficLights(ctx, pavementY, showZones, puppyX);
     }
 
-    // Draw sky (just clouds, no buildings)
-    drawSky(ctx, skyHeight, cloudOffset) {
-        // Sky gradient
-        const skyGradient = ctx.createLinearGradient(0, 0, 0, skyHeight);
-        skyGradient.addColorStop(0, '#87CEEB');
-        skyGradient.addColorStop(1, '#B0D4F1');
-        ctx.fillStyle = skyGradient;
-        ctx.fillRect(0, 0, this.canvasWidth, skyHeight);
-
-        // Just draw clouds with slower parallax for depth
-        cloudOffset = cloudOffset * 0.3;
-        this.drawCloud(ctx, (150 - cloudOffset) % (this.canvasWidth + 200), skyHeight * 0.2);
-        this.drawCloud(ctx, (450 - cloudOffset) % (this.canvasWidth + 200), skyHeight * 0.3);
-        this.drawCloud(ctx, (700 - cloudOffset) % (this.canvasWidth + 200), skyHeight * 0.25);
-    }
-
-    // Draw the repeating background image
-    drawBackgroundImage(ctx, skyTop, canvasHeight) {
+    // Draw the repeating background image at full canvas size
+    drawBackgroundImage(ctx) {
         if (!this.backgroundLoaded) {
             // Show placeholder while loading
-            ctx.fillStyle = '#BEBEBE';
-            ctx.fillRect(0, skyTop, this.canvasWidth, canvasHeight - skyTop);
+            ctx.fillStyle = '#87CEEB';
+            ctx.fillRect(0, 0, this.canvasWidth, this.canvasHeight);
             ctx.fillStyle = '#333';
             ctx.font = '20px Arial';
             ctx.textAlign = 'center';
@@ -142,31 +119,31 @@ class Kerb {
         const bgWidth = this.backgroundImage.width;
         const bgHeight = this.backgroundImage.height;
 
-        // Scale background to fit the ground height while maintaining aspect ratio
-        const groundHeight = canvasHeight - skyTop;
-        const scale = groundHeight / bgHeight;
+        // Scale background to fill entire canvas height while maintaining aspect ratio
+        const scale = this.canvasHeight / bgHeight;
         const scaledWidth = bgWidth * scale;
+        const scaledHeight = this.canvasHeight;
 
-        // Calculate how many times we need to draw the background to cover the screen
-        // plus some buffer for scrolling
+        // Calculate how many times we need to draw the background to cover the screen width
+        // plus buffer for scrolling
         const startX = -(this.worldOffset % scaledWidth);
         const numRepeats = Math.ceil((this.canvasWidth - startX) / scaledWidth) + 1;
 
-        // Draw the background repeated
+        // Draw the background repeated horizontally
         for (let i = 0; i < numRepeats; i++) {
             const x = startX + (i * scaledWidth);
             ctx.drawImage(
                 this.backgroundImage,
                 x,
-                skyTop,
+                0,
                 scaledWidth,
-                groundHeight
+                scaledHeight
             );
         }
     }
 
-    // Draw traffic lights at regular intervals
-    drawTrafficLights(ctx, groundTop, groundHeight, showZones, puppyX) {
+    // Draw traffic lights at regular intervals on the pavement
+    drawTrafficLights(ctx, pavementY, showZones, puppyX) {
         // Calculate how many traffic lights we need to draw
         const startPattern = Math.floor((this.worldOffset - this.patternWidth) / this.patternWidth);
         const endPattern = Math.ceil((this.worldOffset + this.canvasWidth + this.patternWidth) / this.patternWidth);
@@ -177,12 +154,13 @@ class Kerb {
 
             // Only draw if visible on screen
             if (trafficLightX > -100 && trafficLightX < this.canvasWidth + 100) {
-                // Draw traffic light
-                this.drawTrafficLight(ctx, trafficLightX - 19, groundTop - 60);
+                // Draw traffic light on the pavement
+                const trafficLightY = pavementY - 100; // Position above pavement
+                this.drawTrafficLight(ctx, trafficLightX - 19, trafficLightY);
 
                 // Draw stop zones if enabled
                 if (showZones) {
-                    this.drawStopZones(ctx, trafficLightX, groundTop, puppyX);
+                    this.drawStopZones(ctx, trafficLightX, pavementY, puppyX);
                 }
             }
         }

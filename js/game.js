@@ -124,9 +124,9 @@ class Game {
 
     startGame() {
         // Initialize game objects
-        // Puppy stays FIXED at bottom of screen - world scrolls past it
+        // Puppy stays FIXED on pavement - world scrolls past it
         const puppyX = this.canvas.width * 0.2;  // 20% from left side
-        const puppyY = this.canvas.height * 0.85;  // Near bottom (ground is bottom 40%)
+        const puppyY = this.canvas.height * 0.82;  // On the pavement (around 80% down based on background image)
         this.puppy = new Puppy(puppyX, puppyY);
         this.kerbManager = new KerbManager(this.canvas.width, this.canvas.height);
 
