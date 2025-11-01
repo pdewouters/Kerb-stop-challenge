@@ -192,9 +192,16 @@ class Game {
 
         // Update current kerb - scroll the world if puppy is walking
         const currentKerb = this.kerbManager.getCurrentKerb();
-        if (currentKerb && this.puppy.state === 'walking') {
-            // Scroll the world right-to-left
-            currentKerb.update(this.scrollSpeed);
+        if (currentKerb) {
+            if (this.puppy.state === 'walking') {
+                // Scroll the world right-to-left
+                currentKerb.update(this.scrollSpeed);
+
+                // Check if player missed a traffic light
+                if (currentKerb.checkMissedStop(this.puppy.x, true)) {
+                    this.handleMissedKerb();
+                }
+            }
         }
 
         // Update confetti
@@ -256,6 +263,10 @@ class Game {
         // Show feedback
         this.uiManager.showFeedback(result.message, result.quality);
 
+        // Reset intersection tracking for next crossing
+        const currentKerb = this.kerbManager.getCurrentKerb();
+        currentKerb.resetIntersectionTracking();
+
         // Move to next kerb after delay
         setTimeout(() => {
             this.nextKerb();
@@ -313,6 +324,9 @@ class Game {
         // Update scroll speed based on difficulty
         const currentKerb = this.kerbManager.getCurrentKerb();
         this.scrollSpeed = this.difficultySettings[currentKerb.difficulty].speed;
+
+        // Reset intersection tracking
+        currentKerb.resetIntersectionTracking();
     }
 
     nextKerb() {

@@ -12,10 +12,14 @@ class Kerb {
         // Continuous scrolling world offset
         this.worldOffset = 0;
 
-        // Repeating pattern dimensions
-        this.pavementWidth = 500;  // Width of pavement section
-        this.roadWidth = 250;      // Width of road section
-        this.patternWidth = this.pavementWidth + this.roadWidth;  // Total pattern = 750px
+        // Redesigned pattern: mostly buildings/street, with occasional intersection gaps
+        this.streetSectionWidth = 800;  // Normal street with buildings
+        this.intersectionWidth = 300;   // Gap for crossing (with traffic light)
+        this.patternWidth = this.streetSectionWidth + this.intersectionWidth;  // Total = 1100px
+
+        // Track if player has passed an intersection without stopping
+        this.lastCheckedIntersection = -1;
+        this.intersectionPassed = false;
 
         // Stop zone configuration based on difficulty
         this.configureZones();
@@ -49,14 +53,43 @@ class Kerb {
             this.perfectZoneSize = 30;
         }
 
-        // Traffic light is positioned near the end of pavement section (before road)
-        this.trafficLightOffsetInPattern = this.pavementWidth - 70;
+        // Traffic light is in the middle of the intersection gap
+        this.trafficLightOffsetInPattern = this.streetSectionWidth + (this.intersectionWidth / 2);
     }
 
     update(speed) {
         this.pulseTime += this.pulseSpeed;
         // Update world offset - world scrolls right to left
         this.worldOffset += speed;
+    }
+
+    // Check if player missed a traffic light without stopping
+    checkMissedStop(puppyX, isPuppyWalking) {
+        if (!isPuppyWalking) return false;
+
+        const puppyWorldX = this.worldOffset + puppyX;
+        const currentIntersection = Math.floor(puppyWorldX / this.patternWidth);
+
+        // Check if we've moved to a new intersection
+        if (currentIntersection !== this.lastCheckedIntersection) {
+            // Check if puppy passed the traffic light
+            const positionInPattern = puppyWorldX % this.patternWidth;
+            const trafficLightPos = this.trafficLightOffsetInPattern;
+
+            // If we're past the traffic light + stop zone, they missed it
+            if (positionInPattern > trafficLightPos + (this.stopZoneSize / 2)) {
+                this.lastCheckedIntersection = currentIntersection;
+                return true; // Missed the stop!
+            }
+        }
+
+        return false;
+    }
+
+    // Reset intersection tracking (call when player stops correctly or starts new attempt)
+    resetIntersectionTracking() {
+        const puppyWorldX = this.worldOffset + (this.canvasWidth * 0.2); // Default puppy X
+        this.lastCheckedIntersection = Math.floor(puppyWorldX / this.patternWidth);
     }
 
     draw(ctx, showZones = true, puppyX = 0) {
@@ -73,7 +106,7 @@ class Kerb {
         this.drawGroundPattern(ctx, skyHeight, groundHeight, showZones, puppyX);
     }
 
-    // Draw sky with buildings (slower parallax for depth)
+    // Draw sky (simplified - buildings are now drawn with the ground pattern)
     drawSky(ctx, skyHeight, buildingOffset) {
         // Sky gradient
         const skyGradient = ctx.createLinearGradient(0, 0, 0, skyHeight);
@@ -82,37 +115,7 @@ class Kerb {
         ctx.fillStyle = skyGradient;
         ctx.fillRect(0, 0, this.canvasWidth, skyHeight);
 
-        // Draw buildings in background with parallax scrolling
-        const maxBuildingHeight = skyHeight * 0.8;
-        const baseBuildings = [
-            { x: 50, width: 120, heightRatio: 0.6, color: '#B85450', type: 'brick' },
-            { x: 180, width: 30, heightRatio: 0.4, type: 'tree' },
-            { x: 220, width: 100, heightRatio: 0.8, color: '#C67B5C', type: 'brick' },
-            { x: 330, width: 90, heightRatio: 0.5, color: '#D4A574', type: 'stone' },
-            { x: 430, width: 25, heightRatio: 0.35, type: 'tree' },
-            { x: 465, width: 110, heightRatio: 0.7, color: '#A8483F', type: 'brick' },
-            { x: 585, width: 95, heightRatio: 0.65, color: '#D9C2A3', type: 'stone' },
-        ].map(b => ({ ...b, height: maxBuildingHeight * b.heightRatio }));
-
-        const buildingPatternWidth = 700;
-
-        // Draw buildings multiple times to fill screen
-        for (let offset = -buildingPatternWidth; offset < this.canvasWidth + buildingPatternWidth; offset += buildingPatternWidth) {
-            baseBuildings.forEach(element => {
-                const scrolledX = (element.x + offset - buildingOffset) % (buildingPatternWidth * 2);
-                const finalX = scrolledX + (scrolledX < -buildingPatternWidth ? buildingPatternWidth * 2 : 0);
-
-                if (finalX > -element.width && finalX < this.canvasWidth + element.width) {
-                    if (element.type === 'tree') {
-                        this.drawTree(ctx, finalX, skyHeight, element);
-                    } else {
-                        this.drawBuilding(ctx, finalX, skyHeight, element);
-                    }
-                }
-            });
-        }
-
-        // Clouds (even slower parallax)
+        // Just draw clouds with slower parallax for depth
         const cloudOffset = buildingOffset * 0.3;
         this.drawCloud(ctx, (150 - cloudOffset) % (this.canvasWidth + 200), skyHeight * 0.2);
         this.drawCloud(ctx, (450 - cloudOffset) % (this.canvasWidth + 200), skyHeight * 0.3);
@@ -131,71 +134,87 @@ class Kerb {
         }
     }
 
-    // Draw one complete pattern: pavement -> traffic light -> road
+    // Draw one complete pattern: street with buildings, then intersection gap
     drawSinglePattern(ctx, startX, groundTop, groundHeight, showZones, puppyX) {
-        // Pavement section
+        // PART 1: Street section with buildings (800px wide)
+        // Draw pavement/sidewalk (horizontal strip at bottom)
         const pavementGradient = ctx.createLinearGradient(0, groundTop, 0, groundTop + groundHeight);
         pavementGradient.addColorStop(0, '#D3D3D3');
         pavementGradient.addColorStop(1, '#BEBEBE');
         ctx.fillStyle = pavementGradient;
-        ctx.fillRect(startX, groundTop, this.pavementWidth, groundHeight);
+        ctx.fillRect(startX, groundTop, this.streetSectionWidth, groundHeight);
 
-        // Pavement texture (paving slabs)
+        // Pavement texture (paving slabs) - horizontal lines
         ctx.strokeStyle = 'rgba(0, 0, 0, 0.08)';
         ctx.lineWidth = 2;
-        const slabWidth = 60;
         const slabHeight = 40;
 
         for (let y = groundTop; y < groundTop + groundHeight; y += slabHeight) {
             ctx.beginPath();
             ctx.moveTo(startX, y);
-            ctx.lineTo(startX + this.pavementWidth, y);
+            ctx.lineTo(startX + this.streetSectionWidth, y);
             ctx.stroke();
         }
 
-        for (let y = groundTop; y < groundTop + groundHeight; y += slabHeight) {
-            const offset = (Math.floor((y - groundTop) / slabHeight) % 2) * (slabWidth / 2);
-            for (let x = offset; x < this.pavementWidth; x += slabWidth) {
-                ctx.beginPath();
-                ctx.moveTo(startX + x, y);
-                ctx.lineTo(startX + x, Math.min(y + slabHeight, groundTop + groundHeight));
-                ctx.stroke();
+        // Draw simple buildings above the street (in sky area)
+        // Buildings fill the space from sky start to ground top
+        const buildingHeight = groundTop * 0.6; // Buildings use 60% of sky height
+        const buildingBottom = groundTop;
+        const buildingTop = buildingBottom - buildingHeight;
+
+        // Draw a continuous row of buildings
+        const buildingWidth = 120;
+        const numBuildings = Math.ceil(this.streetSectionWidth / buildingWidth);
+
+        for (let i = 0; i < numBuildings; i++) {
+            const bx = startX + (i * buildingWidth);
+            const colors = ['#B85450', '#C67B5C', '#D4A574', '#A8483F', '#D9C2A3'];
+            const color = colors[i % colors.length];
+
+            // Building body
+            ctx.fillStyle = color;
+            ctx.fillRect(bx, buildingTop, buildingWidth - 2, buildingHeight);
+
+            // Building outline
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.4)';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(bx, buildingTop, buildingWidth - 2, buildingHeight);
+
+            // Windows
+            const windowRows = Math.floor(buildingHeight / 40);
+            const windowCols = Math.floor(buildingWidth / 35);
+            for (let row = 0; row < windowRows; row++) {
+                for (let col = 0; col < windowCols; col++) {
+                    const wx = bx + 12 + (col * 35);
+                    const wy = buildingTop + 15 + (row * 40);
+
+                    // Window glass
+                    const isLit = Math.random() > 0.3;
+                    ctx.fillStyle = isLit ? '#FFF5C8' : '#B0D4E8';
+                    ctx.fillRect(wx, wy, 16, 20);
+                }
             }
         }
 
-        // Kerb edge at end of pavement
-        const kerbX = startX + this.pavementWidth;
+        // PART 2: Intersection gap (300px wide) - this is where you cross
+        const intersectionStart = startX + this.streetSectionWidth;
+
+        // Draw pavement continuing through intersection
+        ctx.fillStyle = pavementGradient;
+        ctx.fillRect(intersectionStart, groundTop, this.intersectionWidth, groundHeight);
+
+        // Draw curb edges at start and end of intersection
         ctx.fillStyle = this.colorKerbEdge;
-        ctx.fillRect(kerbX - this.kerbWidth / 2, groundTop - 5, this.kerbWidth, 5);
+        ctx.fillRect(intersectionStart - 3, groundTop, 6, groundHeight);
+        ctx.fillRect(intersectionStart + this.intersectionWidth - 3, groundTop, 6, groundHeight);
 
-        // Kerb face
-        const kerbGradient = ctx.createLinearGradient(kerbX, groundTop, kerbX + this.kerbWidth, groundTop);
-        kerbGradient.addColorStop(0, '#E0E0E0');
-        kerbGradient.addColorStop(1, '#A0A0A0');
-        ctx.fillStyle = kerbGradient;
-        ctx.fillRect(kerbX, groundTop, this.kerbWidth, this.kerbHeight);
-
-        // Traffic light near kerb
-        const trafficLightX = startX + this.trafficLightOffsetInPattern;
-        this.drawTrafficLight(ctx, trafficLightX, groundTop - 120);
-
-        // Road section
-        ctx.fillStyle = this.colorRoad;
-        ctx.fillRect(kerbX, groundTop, this.roadWidth, groundHeight);
-
-        // Road center line
-        ctx.setLineDash([20, 10]);
-        ctx.strokeStyle = '#FFFFFF';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.moveTo(kerbX + this.roadWidth / 2, groundTop);
-        ctx.lineTo(kerbX + this.roadWidth / 2, groundTop + groundHeight);
-        ctx.stroke();
-        ctx.setLineDash([]);
+        // Traffic light in middle of intersection (on the pavement)
+        const trafficLightX = intersectionStart + (this.intersectionWidth / 2) - 19; // Center it
+        this.drawTrafficLight(ctx, trafficLightX, groundTop - 60); // Shorter pole
 
         // Draw stop zones if enabled
         if (showZones) {
-            this.drawStopZones(ctx, trafficLightX, groundTop, puppyX);
+            this.drawStopZones(ctx, trafficLightX + 19, groundTop, puppyX); // +19 to center on light
         }
     }
 
@@ -370,9 +389,9 @@ class Kerb {
     }
 
     drawTrafficLight(ctx, x, y) {
-        // Pole
+        // Shorter pole for pavement-level traffic light
         ctx.fillStyle = '#4A4A4A';
-        ctx.fillRect(x + 15, y + 80, 8, 120);
+        ctx.fillRect(x + 15, y + 80, 8, 60);
 
         // Traffic light box
         ctx.fillStyle = '#2C2C2C';
