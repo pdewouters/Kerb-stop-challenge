@@ -29,11 +29,11 @@ class Game {
         this.lastTime = 0;
         this.animationId = null;
 
-        // Difficulty settings
+        // Difficulty settings (increased by 20% for faster gameplay)
         this.difficultySettings = {
-            1: { speed: 2, label: 'Easy' },
-            2: { speed: 3.5, label: 'Medium' },
-            3: { speed: 5, label: 'Hard' }
+            1: { speed: 2.4, label: 'Easy' },
+            2: { speed: 4.2, label: 'Medium' },
+            3: { speed: 6, label: 'Hard' }
         };
 
         // Initialize
@@ -407,9 +407,7 @@ class Game {
     }
 
     renderStartScreen() {
-        // Start screen now uses CSS background - no canvas rendering needed
-        return;
-
+        // Render game background on start screen canvas
         const startCanvas = document.getElementById('startCanvas');
         if (!startCanvas) {
             console.warn('Start canvas not found');
@@ -426,18 +424,21 @@ class Game {
             const canvasWidth = startCanvas.width;
             const canvasHeight = startCanvas.height;
 
-            // Use same viewport logic as game screen
-            const isSmallLandscape = canvasWidth > canvasHeight && canvasHeight < 500;
-            const pavementHeight = isSmallLandscape
-                ? canvasHeight * 0.25  // 25% sky, 75% ground for small landscape
-                : canvasHeight * 0.6;   // 60% sky, 40% ground for normal screens
+            // Draw same background as game screen
+            // Create a temporary kerb instance to render background
+            const tempKerb = new Kerb(canvasWidth, canvasHeight, 1);
 
-            // Sky gradient
-            const gradient = ctx.createLinearGradient(0, 0, 0, canvasHeight);
-            gradient.addColorStop(0, '#87CEEB');
-            gradient.addColorStop(1, '#E0F6FF');
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+            // Wait for background to load then draw
+            if (tempKerb.backgroundLoaded) {
+                tempKerb.draw(ctx, false, 0);
+            } else {
+                // Show loading or gradient while waiting
+                const gradient = ctx.createLinearGradient(0, 0, 0, canvasHeight);
+                gradient.addColorStop(0, '#87CEEB');
+                gradient.addColorStop(1, '#E0F6FF');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+            }
 
             // Draw clouds
             this.drawSimpleCloud(ctx, 150, 80, 60);
