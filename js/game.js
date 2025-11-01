@@ -397,6 +397,9 @@ class Game {
     }
 
     renderStartScreen() {
+        // Start screen now uses CSS background - no canvas rendering needed
+        return;
+
         const startCanvas = document.getElementById('startCanvas');
         if (!startCanvas) {
             console.warn('Start canvas not found');
