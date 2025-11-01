@@ -29,12 +29,10 @@ class Kerb {
         this.backgroundImage.src = 'assets/images/FAA4CCA7-41BA-4745-A689-15D3DFDF36AA.jpeg?' + Date.now();
 
         // COORDINATE MAPPING SYSTEM
-        // Define traffic light positions as coordinates in the source image
-        // These are approximate positions where there are gaps between buildings
+        // Define traffic light position at the end of the pavement section
+        // The traffic light marks where the dog should stop before crossing
         this.trafficLightPositionsInImage = [
-            { x: 230, y: 0.78, label: 'Between orange house and blue building' },
-            { x: 580, y: 0.78, label: 'Between yellow house and CAFE' },
-            { x: 1000, y: 0.78, label: 'After CAFE building' },
+            { x: 1250, y: 0.78, label: 'End of pavement - crossing point' },
         ];
 
         // Will be calculated once image loads
