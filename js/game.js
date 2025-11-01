@@ -146,6 +146,16 @@ class Game {
         // Show game screen
         ScreenManager.show('gameScreen');
 
+        // Show instructions briefly at start
+        const instructionElement = document.getElementById('instruction');
+        if (instructionElement) {
+            instructionElement.classList.remove('hidden');
+            // Hide instructions after 3 seconds
+            setTimeout(() => {
+                instructionElement.classList.add('hidden');
+            }, 3000);
+        }
+
         // Resize canvas after screen is shown to ensure correct dimensions
         setTimeout(() => {
             this.resizeCanvas();

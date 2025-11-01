@@ -270,18 +270,24 @@ body {
 }
 
 .instruction-text {
-    display: none; /* Hidden during gameplay - overlaps dog on small screens */
     position: absolute;
     bottom: 2rem;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(0,0,0,0.7);
+    background: rgba(0,0,0,0.8);
     color: white;
     padding: 0.75rem 1.5rem;
     border-radius: 25px;
     font-size: 1rem;
     z-index: 5;
     white-space: nowrap;
+    opacity: 1;
+    transition: opacity 0.5s ease;
+}
+
+.instruction-text.hidden {
+    opacity: 0;
+    pointer-events: none;
 }
 
 .feedback-text {
