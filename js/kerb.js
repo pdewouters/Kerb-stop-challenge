@@ -22,7 +22,8 @@ class Kerb {
         this.backgroundImage.onerror = () => {
             console.error('❌ Failed to load background image');
         };
-        this.backgroundImage.src = 'assets/images/FAA4CCA7-41BA-4745-A689-15D3DFDF36AA.jpeg';
+        // Add cache-busting parameter to force reload
+        this.backgroundImage.src = 'assets/images/FAA4CCA7-41BA-4745-A689-15D3DFDF36AA.jpeg?' + Date.now();
 
         // Pattern dimensions - traffic lights appear at regular intervals
         this.patternWidth = 1200;  // Distance between traffic lights
