@@ -18,6 +18,9 @@ class Kerb {
         this.backgroundImage.onload = () => {
             this.backgroundLoaded = true;
             console.log('✅ Background image loaded:', this.backgroundImage.width, 'x', this.backgroundImage.height);
+
+            // Calculate scaling once image is loaded
+            this.calculateBackgroundScale();
         };
         this.backgroundImage.onerror = () => {
             console.error('❌ Failed to load background image');
@@ -25,13 +28,21 @@ class Kerb {
         // Add cache-busting parameter to force reload
         this.backgroundImage.src = 'assets/images/FAA4CCA7-41BA-4745-A689-15D3DFDF36AA.jpeg?' + Date.now();
 
-        // Pattern dimensions - traffic lights appear at regular intervals
-        this.patternWidth = 1200;  // Distance between traffic lights
-        this.trafficLightPosition = 600; // Middle of pattern
+        // COORDINATE MAPPING SYSTEM
+        // Define traffic light positions as coordinates in the source image
+        // These are approximate positions where there are gaps between buildings
+        this.trafficLightPositionsInImage = [
+            { x: 230, y: 0.78, label: 'Between orange house and blue building' },
+            { x: 580, y: 0.78, label: 'Between yellow house and CAFE' },
+            { x: 1000, y: 0.78, label: 'After CAFE building' },
+        ];
+
+        // Will be calculated once image loads
+        this.scaledTrafficLightPositions = [];
+        this.scaledBackgroundWidth = 0;
 
         // Track if player has passed an intersection without stopping
         this.lastCheckedIntersection = -1;
-        this.intersectionPassed = false;
 
         // Stop zone configuration based on difficulty
         this.configureZones();
@@ -43,6 +54,29 @@ class Kerb {
         // Animation for visual feedback
         this.pulseTime = 0;
         this.pulseSpeed = 0.05;
+    }
+
+    // Calculate how the background will be scaled and update traffic light positions
+    calculateBackgroundScale() {
+        if (!this.backgroundLoaded) return;
+
+        const bgWidth = this.backgroundImage.width;
+        const bgHeight = this.backgroundImage.height;
+
+        // Scale background to fill entire canvas height
+        const scale = this.canvasHeight / bgHeight;
+        this.scaledBackgroundWidth = bgWidth * scale;
+        this.scale = scale;
+
+        // Scale traffic light positions to match scaled background
+        this.scaledTrafficLightPositions = this.trafficLightPositionsInImage.map(pos => ({
+            x: pos.x * scale,
+            y: pos.y,  // Y is already a percentage
+            label: pos.label
+        }));
+
+        console.log('📍 Scaled background width:', this.scaledBackgroundWidth);
+        console.log('📍 Traffic light positions:', this.scaledTrafficLightPositions);
     }
 
     configureZones() {
@@ -67,21 +101,33 @@ class Kerb {
 
     // Check if player missed a traffic light without stopping
     checkMissedStop(puppyX, isPuppyWalking) {
-        if (!isPuppyWalking) return false;
+        if (!isPuppyWalking || this.scaledTrafficLightPositions.length === 0) return false;
 
         const puppyWorldX = this.worldOffset + puppyX;
-        const currentIntersection = Math.floor(puppyWorldX / this.patternWidth);
 
-        // Check if we've moved to a new intersection
-        if (currentIntersection !== this.lastCheckedIntersection) {
-            // Check if puppy passed the traffic light
-            const positionInPattern = puppyWorldX % this.patternWidth;
+        // Check each traffic light position across all background repeats
+        const currentBackgroundRepeat = Math.floor(puppyWorldX / this.scaledBackgroundWidth);
 
-            // If we're past the traffic light + stop zone, they missed it
-            if (positionInPattern > this.trafficLightPosition + (this.stopZoneSize / 2)) {
-                this.lastCheckedIntersection = currentIntersection;
-                return true; // Missed the stop!
-            }
+        // Check traffic lights in current and next background repeat
+        for (let repeatIndex = currentBackgroundRepeat; repeatIndex <= currentBackgroundRepeat + 1; repeatIndex++) {
+            this.scaledTrafficLightPositions.forEach((lightPos, lightIndex) => {
+                const worldLightX = (repeatIndex * this.scaledBackgroundWidth) + lightPos.x;
+                const intersectionId = `${repeatIndex}-${lightIndex}`;
+
+                // Check if we just passed this traffic light
+                if (puppyWorldX > worldLightX + (this.stopZoneSize / 2)) {
+                    // Check if we already recorded this as missed
+                    if (this.lastCheckedIntersection !== intersectionId) {
+                        this.lastCheckedIntersection = intersectionId;
+
+                        // Check if puppy was ever in the stop zone
+                        const wasInStopZone = Math.abs(puppyWorldX - worldLightX) <= (this.stopZoneSize / 2);
+                        if (!wasInStopZone) {
+                            return true; // Missed the stop!
+                        }
+                    }
+                }
+            });
         }
 
         return false;
@@ -89,8 +135,7 @@ class Kerb {
 
     // Reset intersection tracking (call when player stops correctly or starts new attempt)
     resetIntersectionTracking() {
-        const puppyWorldX = this.worldOffset + (this.canvasWidth * 0.2); // Default puppy X
-        this.lastCheckedIntersection = Math.floor(puppyWorldX / this.patternWidth);
+        this.lastCheckedIntersection = null;
     }
 
     draw(ctx, showZones = true, puppyX = 0) {
@@ -143,27 +188,36 @@ class Kerb {
         }
     }
 
-    // Draw traffic lights at regular intervals on the pavement
+    // Draw traffic lights at positions defined in the coordinate map
     drawTrafficLights(ctx, pavementY, showZones, puppyX) {
-        // Calculate how many traffic lights we need to draw
-        const startPattern = Math.floor((this.worldOffset - this.patternWidth) / this.patternWidth);
-        const endPattern = Math.ceil((this.worldOffset + this.canvasWidth + this.patternWidth) / this.patternWidth);
+        if (!this.backgroundLoaded || this.scaledTrafficLightPositions.length === 0) return;
 
-        for (let i = startPattern; i <= endPattern; i++) {
-            const patternX = i * this.patternWidth - this.worldOffset;
-            const trafficLightX = patternX + this.trafficLightPosition;
+        // Calculate which background repeats are visible
+        const firstVisibleRepeat = Math.floor((this.worldOffset - this.scaledBackgroundWidth) / this.scaledBackgroundWidth);
+        const lastVisibleRepeat = Math.ceil((this.worldOffset + this.canvasWidth + this.scaledBackgroundWidth) / this.scaledBackgroundWidth);
 
-            // Only draw if visible on screen
-            if (trafficLightX > -100 && trafficLightX < this.canvasWidth + 100) {
-                // Draw traffic light on the pavement
-                const trafficLightY = pavementY - 100; // Position above pavement
-                this.drawTrafficLight(ctx, trafficLightX - 19, trafficLightY);
+        // Draw traffic lights for each visible background repeat
+        for (let repeatIndex = firstVisibleRepeat; repeatIndex <= lastVisibleRepeat; repeatIndex++) {
+            this.scaledTrafficLightPositions.forEach(lightPos => {
+                // Calculate world position (absolute position in game world)
+                const worldX = (repeatIndex * this.scaledBackgroundWidth) + lightPos.x;
 
-                // Draw stop zones if enabled
-                if (showZones) {
-                    this.drawStopZones(ctx, trafficLightX, pavementY, puppyX);
+                // Convert to screen position
+                const screenX = worldX - this.worldOffset;
+
+                // Only draw if visible on screen
+                if (screenX > -100 && screenX < this.canvasWidth + 100) {
+                    const screenY = this.canvasHeight * lightPos.y;
+
+                    // Draw traffic light
+                    this.drawTrafficLight(ctx, screenX - 19, screenY - 100);
+
+                    // Draw stop zones if enabled (for debugging)
+                    if (showZones) {
+                        this.drawStopZones(ctx, screenX, pavementY, puppyX);
+                    }
                 }
-            }
+            });
         }
     }
 
@@ -373,26 +427,40 @@ class Kerb {
 
     // Check stop quality based on puppy's position when stopped
     checkStopQuality(puppyX) {
-        // Find nearest traffic light to puppy
+        if (this.scaledTrafficLightPositions.length === 0) return 'too-late';
+
         const puppyWorldX = this.worldOffset + puppyX;
 
-        // Calculate which pattern the puppy is in
-        const patternIndex = Math.floor(puppyWorldX / this.patternWidth);
-        const positionInPattern = puppyWorldX % this.patternWidth;
+        // Find the nearest traffic light
+        let nearestDistance = Infinity;
+        let nearestQuality = 'too-late';
 
-        // Calculate distance from traffic light
-        const distanceFromLight = Math.abs(positionInPattern - this.trafficLightPosition);
+        const currentBackgroundRepeat = Math.floor(puppyWorldX / this.scaledBackgroundWidth);
 
-        // Check zones
-        if (distanceFromLight <= this.perfectZoneSize / 2) {
-            return 'perfect';
-        } else if (distanceFromLight <= this.stopZoneSize / 2) {
-            return 'good';
-        } else if (positionInPattern < this.trafficLightPosition) {
-            return 'too-early';
-        } else {
-            return 'too-late';
+        // Check traffic lights in nearby background repeats
+        for (let repeatIndex = currentBackgroundRepeat - 1; repeatIndex <= currentBackgroundRepeat + 1; repeatIndex++) {
+            this.scaledTrafficLightPositions.forEach(lightPos => {
+                const worldLightX = (repeatIndex * this.scaledBackgroundWidth) + lightPos.x;
+                const distance = Math.abs(puppyWorldX - worldLightX);
+
+                if (distance < nearestDistance) {
+                    nearestDistance = distance;
+
+                    // Determine quality based on distance
+                    if (distance <= this.perfectZoneSize / 2) {
+                        nearestQuality = 'perfect';
+                    } else if (distance <= this.stopZoneSize / 2) {
+                        nearestQuality = 'good';
+                    } else if (puppyWorldX < worldLightX) {
+                        nearestQuality = 'too-early';
+                    } else {
+                        nearestQuality = 'too-late';
+                    }
+                }
+            });
         }
+
+        return nearestQuality;
     }
 
     // Get stop quality and score
