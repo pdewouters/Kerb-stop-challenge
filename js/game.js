@@ -424,71 +424,28 @@ class Game {
             const canvasWidth = startCanvas.width;
             const canvasHeight = startCanvas.height;
 
-            // Draw same background as game screen
-            // Create a temporary kerb instance to render background
-            const tempKerb = new Kerb(canvasWidth, canvasHeight, 1);
+            // Load and draw the background image directly
+            const bgImage = new Image();
+            bgImage.onload = () => {
+                // Scale to fill canvas height
+                const scale = canvasHeight / bgImage.height;
+                const scaledWidth = bgImage.width * scale;
 
-            // Wait for background to load then draw
-            if (tempKerb.backgroundLoaded) {
-                tempKerb.draw(ctx, false, 0);
-            } else {
-                // Show loading or gradient while waiting
+                // Draw tiled background
+                for (let x = 0; x < canvasWidth + scaledWidth; x += scaledWidth) {
+                    ctx.drawImage(bgImage, x, 0, scaledWidth, canvasHeight);
+                }
+            };
+            bgImage.onerror = () => {
+                // Fallback to gradient if image fails to load
                 const gradient = ctx.createLinearGradient(0, 0, 0, canvasHeight);
                 gradient.addColorStop(0, '#87CEEB');
-                gradient.addColorStop(1, '#E0F6FF');
+                gradient.addColorStop(1, '#B0D4F1');
                 ctx.fillStyle = gradient;
                 ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-            }
-
-            // Draw clouds
-            this.drawSimpleCloud(ctx, 150, 80, 60);
-            this.drawSimpleCloud(ctx, 450, 120, 50);
-            this.drawSimpleCloud(ctx, 750, 100, 55);
-
-            // Draw simple buildings
-            this.drawSimpleBuilding(ctx, 100, pavementHeight - 180, 120, 180, '#B85450');
-            this.drawSimpleBuilding(ctx, 240, pavementHeight - 240, 100, 240, '#C67B5C');
-            this.drawSimpleBuilding(ctx, 360, pavementHeight - 160, 90, 160, '#D4A574');
-            this.drawSimpleBuilding(ctx, 470, pavementHeight - 200, 110, 200, '#A8483F');
-            this.drawSimpleBuilding(ctx, 600, pavementHeight - 190, 95, 190, '#D9C2A3');
-
-            // Draw trees
-            this.drawSimpleTree(ctx, 230, pavementHeight, 80);
-            this.drawSimpleTree(ctx, 455, pavementHeight, 70);
-
-            // Draw pavement
-            const pavementGradient = ctx.createLinearGradient(0, pavementHeight, 0, canvasHeight);
-            pavementGradient.addColorStop(0, '#D3D3D3');
-            pavementGradient.addColorStop(1, '#BEBEBE');
-            ctx.fillStyle = pavementGradient;
-            ctx.fillRect(0, pavementHeight, canvasWidth * 0.6, canvasHeight - pavementHeight);
-
-            // Draw road
-            ctx.fillStyle = '#4A4A4A';
-            ctx.fillRect(canvasWidth * 0.6, pavementHeight, canvasWidth * 0.4, canvasHeight - pavementHeight);
-
-            // Draw kerb edge
-            ctx.fillStyle = '#FFD700';
-            ctx.fillRect(canvasWidth * 0.6 - 5, pavementHeight - 5, 10, 5);
-
-            // Draw traffic light
-            this.drawSimpleTrafficLight(ctx, canvasWidth * 0.6 - 60, pavementHeight - 120);
-
-            // Draw dog (if image loads)
-            const dogImg = new Image();
-            dogImg.onerror = () => {
-                console.warn('Dog image failed to load for start screen');
             };
-            dogImg.onload = () => {
-                const dogWidth = 100;
-                const dogHeight = (dogImg.height / dogImg.width) * dogWidth;
-                // Position dog based on viewport - in ground area
-                const dogY = isSmallLandscape
-                    ? canvasHeight * 0.45 - dogHeight / 2  // Match game screen position
-                    : canvasHeight * 0.7 - dogHeight / 2;
-                ctx.drawImage(dogImg, canvasWidth * 0.3, dogY, dogWidth, dogHeight);
-            };
-            dogImg.src = 'assets/images/dog.png';
+            bgImage.src = 'assets/images/FAA4CCA7-41BA-4745-A689-15D3DFDF36AA.jpeg?' + Date.now();
+
         } catch (error) {
             console.error('Error rendering start screen:', error);
         }
