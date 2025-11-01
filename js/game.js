@@ -124,13 +124,10 @@ class Game {
 
     startGame() {
         // Initialize game objects
-        // Puppy position adjusted for screen size/orientation
-        // With 25% sky / 75% ground on small landscape, position puppy in visible ground area
-        const isSmallLandscape = this.canvas.width > this.canvas.height && this.canvas.height < 500;
-        const puppyY = isSmallLandscape
-            ? this.canvas.height * 0.45  // Position in middle of ground area (viewport is at 25%)
-            : this.canvas.height * 0.70; // Normal position on other screens
-        this.puppy = new Puppy(100, puppyY);
+        // Puppy stays FIXED at bottom of screen - world scrolls past it
+        const puppyX = this.canvas.width * 0.2;  // 20% from left side
+        const puppyY = this.canvas.height * 0.85;  // Near bottom (ground is bottom 40%)
+        this.puppy = new Puppy(puppyX, puppyY);
         this.kerbManager = new KerbManager(this.canvas.width, this.canvas.height);
 
         // Reset game state
@@ -138,9 +135,9 @@ class Game {
         this.currentAttempts = this.maxAttempts;
         this.state = 'playing';
 
-        // Set initial difficulty
+        // Store current scroll speed (difficulty affects scroll speed)
         const currentKerb = this.kerbManager.getCurrentKerb();
-        this.puppy.setSpeed(this.difficultySettings[currentKerb.difficulty].speed);
+        this.scrollSpeed = this.difficultySettings[currentKerb.difficulty].speed;
 
         // Update UI
         this.uiManager.updateScore(this.score);
@@ -190,18 +187,14 @@ class Game {
     }
 
     update(deltaTime) {
-        // Update puppy
+        // Update puppy animation (stays in place)
         this.puppy.update(deltaTime);
 
-        // Update current kerb
+        // Update current kerb - scroll the world if puppy is walking
         const currentKerb = this.kerbManager.getCurrentKerb();
-        if (currentKerb) {
-            currentKerb.update();
-
-            // Check if puppy passed the kerb without stopping
-            if (this.puppy.state === 'walking' && currentKerb.hasPassed(this.puppy.x)) {
-                this.handleMissedKerb();
-            }
+        if (currentKerb && this.puppy.state === 'walking') {
+            // Scroll the world right-to-left
+            currentKerb.update(this.scrollSpeed);
         }
 
         // Update confetti
@@ -211,21 +204,14 @@ class Game {
     }
 
     draw() {
-        // Clear canvas with sky gradient
-        const gradient = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
-        gradient.addColorStop(0, '#87CEEB');
-        gradient.addColorStop(1, '#E0F6FF');
-        this.ctx.fillStyle = gradient;
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
-        // Draw current kerb (with puppy position for parallax scrolling)
+        // Draw current kerb - this draws entire scene (sky, buildings, ground, traffic lights)
         const currentKerb = this.kerbManager.getCurrentKerb();
         if (currentKerb) {
-            // Don't show stop zone indicators (removed visual clutter)
+            // Show stop zones in debug mode only
             currentKerb.draw(this.ctx, false, this.puppy.x);
         }
 
-        // Draw puppy
+        // Draw puppy (stays fixed on screen)
         this.puppy.draw(this.ctx);
 
         // Draw confetti
@@ -321,13 +307,12 @@ class Game {
     }
 
     resetPuppyPosition() {
-        // Reset puppy to start position
-        this.puppy.x = 100;
+        // Puppy stays at fixed position - just resume walking
         this.puppy.reset();
 
-        // Update difficulty
+        // Update scroll speed based on difficulty
         const currentKerb = this.kerbManager.getCurrentKerb();
-        this.puppy.setSpeed(this.difficultySettings[currentKerb.difficulty].speed);
+        this.scrollSpeed = this.difficultySettings[currentKerb.difficulty].speed;
     }
 
     nextKerb() {
@@ -338,7 +323,7 @@ class Game {
         const hasMore = this.kerbManager.nextKerb();
 
         if (hasMore) {
-            // Reset puppy for next kerb
+            // Reset puppy for next kerb and update scroll speed
             this.resetPuppyPosition();
             this.updateProgress();
         } else {

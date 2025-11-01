@@ -82,8 +82,9 @@ class Puppy {
     }
 
     update(deltaTime = 1) {
+        // Puppy stays at fixed position - only animate in place
         if (this.state === 'walking') {
-            this.x += this.speed;
+            // No more this.x += this.speed; - puppy stays fixed!
             this.frameTime += this.walkCycleSpeed;
 
             // Bounce animation for walking
