@@ -505,7 +505,7 @@ class KerbManager {
         this.canvasWidth = canvasWidth;
         this.canvasHeight = canvasHeight;
         this.currentKerbIndex = 0;
-        this.totalKerbs = 10;
+        this.totalKerbs = 5;
 
         // Create single kerb instance that handles continuous scrolling
         this.kerb = new Kerb(canvasWidth, canvasHeight, 1);

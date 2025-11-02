@@ -327,14 +327,25 @@ body {
 }
 
 /* Complete Screen */
+#completeScreen {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
 .complete-container {
     max-width: 500px;
     width: 90%;
-    margin: 0 auto;
+    margin: 2rem auto;
     padding: 2rem 1.5rem;
-    max-height: 90vh;
+    max-height: 85vh;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
 }
 
 #completeScreen .container {

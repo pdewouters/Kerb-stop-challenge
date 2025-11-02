@@ -162,9 +162,11 @@ class Game {
             console.log('Canvas resized after game screen shown');
         }, 100);
 
-        // Start game loop
-        this.lastTime = performance.now();
-        this.gameLoop();
+        // Start game loop with proper timing initialization
+        this.animationId = requestAnimationFrame((time) => {
+            this.lastTime = time;
+            this.gameLoop(time);
+        });
     }
 
     restartGame() {
