@@ -102,11 +102,11 @@ class Game {
             }
         });
 
-        // Touch/Click input on canvas
+        // Touch/Click input on canvas - MUST use { passive: false } to allow preventDefault()
         this.canvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
             this.handleInput();
-        });
+        }, { passive: false });
 
         this.canvas.addEventListener('click', (e) => {
             e.preventDefault();
