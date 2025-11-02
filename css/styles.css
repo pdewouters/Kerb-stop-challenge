@@ -269,7 +269,7 @@ body {
     flex: 1;
     display: block;
     background: #87CEEB;
-    touch-action: none;
+    touch-action: manipulation;
     cursor: pointer;
 }
 
