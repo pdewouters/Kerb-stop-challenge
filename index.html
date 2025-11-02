@@ -81,7 +81,7 @@
 
         <!-- Complete Screen -->
         <div id="completeScreen" class="screen">
-            <div class="container">
+            <div class="complete-container">
                 <h1 id="completeTitle">Training Complete!</h1>
                 <div class="final-score">
                     <div id="gradeEmoji" class="grade-emoji">⭐⭐⭐</div>
@@ -92,9 +92,30 @@
                     </div>
                 </div>
 
+                <!-- Donation Information Inline -->
+                <div class="donation-info">
+                    <div class="puppy-grad">🐕‍🦺🎓</div>
+                    <h3>Help Train Real Guide Dogs</h3>
+                    <p class="impact-text">
+                        It costs <strong>£56,000</strong> to train a guide dog like this puppy.
+                    </p>
+
+                    <div class="fun-fact-box">
+                        <h4>🐕 Did You Know?</h4>
+                        <p id="randomFact" class="fun-fact"></p>
+                    </div>
+
+                    <p class="fun-message">
+                        Every donation helps train more amazing guide dogs to change lives! 🐕‍🦺💛
+                    </p>
+                </div>
+
                 <div class="buttons-container">
-                    <button id="playAgainButton" class="btn btn-primary">Play Again</button>
-                    <button id="donateButton" class="btn btn-secondary">Support Guide Dogs 💛</button>
+                    <a href="https://www.guidedogs.org.uk/donate-now/?utm_source=kerb_challenge&utm_medium=game&utm_campaign=kerb_stop_game"
+                       target="_blank" rel="noopener" class="btn btn-primary btn-donate-inline">
+                        🎁 Help Train Guide Dogs 🎁
+                    </a>
+                    <button id="playAgainButton" class="btn btn-secondary">Play Again</button>
                     <button id="shareButton" class="btn btn-outline">Share Your Score</button>
                 </div>
             </div>

@@ -39,7 +39,6 @@ class UIManager {
             // Buttons
             startButton: document.getElementById('startButton'),
             playAgainButton: document.getElementById('playAgainButton'),
-            donateButton: document.getElementById('donateButton'),
             shareButton: document.getElementById('shareButton'),
             pauseButton: document.getElementById('pauseButton'),
             muteButton: document.getElementById('muteButton'),
@@ -82,13 +81,7 @@ class UIManager {
 
         // Play again button
         this.elements.playAgainButton.addEventListener('click', () => {
-            ModalManager.hide('donationModal');
             this.game.restartGame();
-        });
-
-        // Donate button
-        this.elements.donateButton.addEventListener('click', () => {
-            this.showDonationModal();
         });
 
         // Share button
@@ -193,6 +186,14 @@ class UIManager {
             this.elements.completeTitle.textContent = '🎉 New High Score! 🎉';
         } else {
             this.elements.completeTitle.textContent = 'Training Complete!';
+        }
+
+        // Populate random fact in complete screen
+        const randomIndex = Math.floor(Math.random() * this.guideDogFacts.length);
+        const randomFact = this.guideDogFacts[randomIndex];
+        const factElement = document.getElementById('randomFact');
+        if (factElement) {
+            factElement.textContent = randomFact;
         }
 
         ScreenManager.show('completeScreen');

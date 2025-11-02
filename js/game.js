@@ -382,11 +382,6 @@ class Game {
         // Show complete screen after brief delay
         setTimeout(() => {
             this.uiManager.showCompleteScreen(this.score, isNewHighScore);
-
-            // Show donation modal after another delay
-            setTimeout(() => {
-                this.uiManager.showDonationModal();
-            }, 1000);
         }, 1000);
     }
 
