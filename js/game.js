@@ -115,6 +115,7 @@ class Game {
     }
 
     handleInput() {
+        console.log('Input received! State:', this.state, 'Puppy state:', this.puppy?.state);
         if (this.state === 'playing') {
             this.stopPuppy();
         } else if (this.state === 'paused') {
@@ -240,7 +241,11 @@ class Game {
     }
 
     stopPuppy() {
-        if (this.puppy.state !== 'walking') return;
+        console.log('stopPuppy called. Puppy state:', this.puppy.state);
+        if (this.puppy.state !== 'walking') {
+            console.log('Puppy not walking, ignoring stop');
+            return;
+        }
 
         // Stop the puppy
         this.puppy.stop();
@@ -249,6 +254,7 @@ class Game {
         // Check stop quality
         const currentKerb = this.kerbManager.getCurrentKerb();
         const result = currentKerb.getStopQuality(this.puppy.x);
+        console.log('Stop result:', result);
 
         // Handle result
         if (result.quality === 'perfect' || result.quality === 'good') {
@@ -331,7 +337,9 @@ class Game {
 
     resetPuppyPosition() {
         // Puppy stays at fixed position - just resume walking
+        console.log('Resetting puppy position. Before:', this.puppy.state);
         this.puppy.reset();
+        console.log('After reset:', this.puppy.state);
 
         // Update scroll speed based on difficulty
         const currentKerb = this.kerbManager.getCurrentKerb();
