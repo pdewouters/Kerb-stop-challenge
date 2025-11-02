@@ -115,8 +115,9 @@ class Game {
     }
 
     handleInput() {
-        console.log('Input received! State:', this.state, 'Puppy state:', this.puppy?.state);
+        console.log('🎮 Input received! State:', this.state, 'Puppy state:', this.puppy?.state);
         if (this.state === 'playing') {
+            console.log('✅ Calling stopPuppy()');
             this.stopPuppy();
         } else if (this.state === 'paused') {
             this.togglePause();
@@ -251,8 +252,11 @@ class Game {
         this.puppy.stop();
         this.audioManager.play('sit');
 
-        // Check stop quality
+        // Mark that player has stopped at this intersection (prevents false miss detection)
         const currentKerb = this.kerbManager.getCurrentKerb();
+        currentKerb.hasStoppedAtCurrentIntersection = true;
+
+        // Check stop quality
         const result = currentKerb.getStopQuality(this.puppy.x);
         console.log('Stop result:', result);
 
