@@ -135,11 +135,6 @@ class Game {
         // Reset game state
         this.score = 0;
         this.currentAttempts = this.maxAttempts;
-        this.state = 'playing';
-
-        // Store current scroll speed (difficulty affects scroll speed)
-        const currentKerb = this.kerbManager.getCurrentKerb();
-        this.scrollSpeed = this.difficultySettings[currentKerb.difficulty].speed;
 
         // Update UI
         this.uiManager.updateScore(this.score);
@@ -148,27 +143,46 @@ class Game {
         // Show game screen
         ScreenManager.show('gameScreen');
 
-        // Show instructions briefly at start
-        const instructionElement = document.getElementById('instruction');
-        if (instructionElement) {
-            instructionElement.classList.remove('hidden');
-            // Hide instructions after 3 seconds
-            setTimeout(() => {
-                instructionElement.classList.add('hidden');
-            }, 3000);
-        }
-
         // Resize canvas after screen is shown to ensure correct dimensions
         setTimeout(() => {
             this.resizeCanvas();
             console.log('Canvas resized after game screen shown');
         }, 100);
 
-        // Start game loop with proper timing initialization
-        this.animationId = requestAnimationFrame((time) => {
-            this.lastTime = time;
-            this.gameLoop(time);
-        });
+        // WAIT for background to load before starting game loop
+        const currentKerb = this.kerbManager.getCurrentKerb();
+        const checkBackgroundLoaded = () => {
+            if (currentKerb.backgroundLoaded && currentKerb.scaledTrafficLightPositions.length > 0) {
+                console.log('✅ Background loaded, starting game!');
+
+                // NOW set state to playing
+                this.state = 'playing';
+
+                // Store current scroll speed (difficulty affects scroll speed)
+                this.scrollSpeed = this.difficultySettings[currentKerb.difficulty].speed;
+
+                // Show instructions briefly at start
+                const instructionElement = document.getElementById('instruction');
+                if (instructionElement) {
+                    instructionElement.classList.remove('hidden');
+                    // Hide instructions after 3 seconds
+                    setTimeout(() => {
+                        instructionElement.classList.add('hidden');
+                    }, 3000);
+                }
+
+                // Start game loop with proper timing initialization
+                this.animationId = requestAnimationFrame((time) => {
+                    this.lastTime = time;
+                    this.gameLoop(time);
+                });
+            } else {
+                console.log('⏳ Waiting for background to load...');
+                setTimeout(checkBackgroundLoaded, 100);
+            }
+        };
+
+        checkBackgroundLoaded();
     }
 
     restartGame() {
