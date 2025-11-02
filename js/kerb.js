@@ -42,6 +42,9 @@ class Kerb {
         // Track if player has passed an intersection without stopping
         this.lastCheckedIntersection = -1;
 
+        // Track if player has stopped at current intersection (to prevent false miss detection)
+        this.hasStoppedAtCurrentIntersection = false;
+
         // Stop zone configuration based on difficulty
         this.configureZones();
 
@@ -101,6 +104,11 @@ class Kerb {
     checkMissedStop(puppyX, isPuppyWalking) {
         if (!isPuppyWalking || this.scaledTrafficLightPositions.length === 0) return false;
 
+        // If player has already stopped at current intersection, they haven't missed it
+        if (this.hasStoppedAtCurrentIntersection) {
+            return false;
+        }
+
         const puppyWorldX = this.worldOffset + puppyX;
 
         // Check each traffic light position across all background repeats
@@ -112,17 +120,16 @@ class Kerb {
                 const worldLightX = (repeatIndex * this.scaledBackgroundWidth) + lightPos.x;
                 const intersectionId = `${repeatIndex}-${lightIndex}`;
 
-                // Check if we just passed this traffic light
-                if (puppyWorldX > worldLightX + (this.stopZoneSize / 2)) {
-                    // Check if we already recorded this as missed
+                // Check if we just passed this traffic light completely (past the far edge of stop zone)
+                const passedStopZone = puppyWorldX > worldLightX + (this.stopZoneSize / 2);
+
+                if (passedStopZone) {
+                    // Check if we already recorded this intersection
                     if (this.lastCheckedIntersection !== intersectionId) {
                         this.lastCheckedIntersection = intersectionId;
-
-                        // Check if puppy was ever in the stop zone
-                        const wasInStopZone = Math.abs(puppyWorldX - worldLightX) <= (this.stopZoneSize / 2);
-                        if (!wasInStopZone) {
-                            return true; // Missed the stop!
-                        }
+                        // Player walked past without stopping - this is a miss!
+                        console.log('❌ Missed traffic light! Intersection:', intersectionId);
+                        return true;
                     }
                 }
             });
@@ -134,6 +141,7 @@ class Kerb {
     // Reset intersection tracking (call when player stops correctly or starts new attempt)
     resetIntersectionTracking() {
         this.lastCheckedIntersection = null;
+        this.hasStoppedAtCurrentIntersection = false;
     }
 
     draw(ctx, showZones = true, puppyX = 0) {
@@ -538,6 +546,7 @@ class KerbManager {
         this.kerb.worldOffset = 0;
         this.kerb.difficulty = 1;
         this.kerb.configureZones();
+        this.kerb.resetIntersectionTracking();
     }
 
     isComplete() {
